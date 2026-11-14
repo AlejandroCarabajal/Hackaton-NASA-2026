@@ -878,3 +878,31 @@ input[type="range"] {
   }
 }
 
+/* ===== Diseño a todo el ancho de la pantalla ===== */
+/* El contenido ya no queda encerrado en una columna de 880 px al centro:
+   ocupa todo el ancho, con un margen lateral que crece con la pantalla. */
+body {
+  padding-left: clamp(14px, 3vw, 48px);
+  padding-right: clamp(14px, 3vw, 48px);
+}
+.wrap {
+  max-width: none;
+  width: 100%;
+}
+.sub {
+  max-width: 100ch;
+}
+/* Mapa más alto en pantallas grandes */
+#map {
+  height: clamp(400px, 55vh, 640px);
+}
+/* Los gráficos se dibujan al ancho del panel desde JS (chartWidth en script.js) */
+.chart-wrap svg {
+  display: block;
+}
+/* Datos del terreno: 4 columnas cuando hay espacio */
+@media (min-width: 1200px) {
+  .terreno-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}

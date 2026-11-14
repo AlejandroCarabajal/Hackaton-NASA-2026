@@ -477,7 +477,8 @@ function renderAnnual(A){
   const ns = 'http://www.w3.org/2000/svg';
   const mk = (tag, attrs, txt) => { const e = document.createElementNS(ns, tag); Object.keys(attrs).forEach(k => e.setAttribute(k, attrs[k])); if(txt !== undefined) e.textContent = txt; svg.appendChild(e); return e; };
 
-  const w = 800, h = 270, padL = 40, padR = 40, padT = 14, padB = 44;
+  const w = chartWidth(), h = 270, padL = 40, padR = 40, padT = 14, padB = 44;
+  sizeChart(svg, w, h);
   const M = A.monthly;
   const rains = M.map(x => x.rain || 0);
   const maxR = Math.max(60, Math.max.apply(null, rains));
@@ -723,6 +724,13 @@ function setGibsLayer(key){
     note.textContent = baseNote();
   }).catch(() => {});
 }
+
+// Al cambiar el tamaño de la ventana, los gráficos se vuelven a dibujar al nuevo ancho
+let resizeTimer = null;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => { if(lastAnalysis) renderAll(); }, 200);
+});
 
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('gibsLayer').addEventListener('change', e => setGibsLayer(e.target.value));

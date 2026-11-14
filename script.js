@@ -375,14 +375,13 @@ function updateCoords(lat, lng){
   latInput.value = lat.toFixed(4);
   lonInput.value = lng.toFixed(4);
   document.getElementById('terrenoPanel').style.display = 'none';
-<<<<<<< HEAD
   if(typeof invalidateAnalysis === 'function') invalidateAnalysis();
   document.getElementById('countryBadge').textContent = 'Detectando ubicación…';
   clearTimeout(geocodeTimer);
-  geocodeTimer = setTimeout(() => detectCountry(lat, lng), GEOCODE_DELAY_MS);
-=======
-  detectCountry(lat, lng);
-  updateBaseImageDate(lat, lng);
+  geocodeTimer = setTimeout(() => {
+    detectCountry(lat, lng);
+    updateBaseImageDate(lat, lng);
+  }, GEOCODE_DELAY_MS);
 }
 
 // Fecha de captura de la imagen base (Esri World Imagery) en el punto elegido.
@@ -409,7 +408,6 @@ async function updateBaseImageDate(lat, lng){
   } catch(err){
     if(req === baseDateReq) el.textContent = 'Imagen base (Esri World Imagery): no se pudo consultar la fecha de captura.';
   }
->>>>>>> ac666aba8297850c24d8ac05f2f1915dee698ffd
 }
 
 [latInput, lonInput].forEach(el => el.addEventListener('input', () => {
@@ -810,11 +808,27 @@ function sum(obj){
   return Object.values(obj).filter(v => v > -900).reduce((a,b)=>a+b,0);
 }
 
+// Ancho en píxeles para dibujar un gráfico: el ancho interno de los paneles.
+// Se calcula desde .wrap porque el panel puede estar oculto (ancho 0) al momento de dibujar.
+// Mínimo 600 px: en celulares el gráfico conserva el desplazamiento horizontal.
+const PANEL_INNER_OFFSET = 42;   // 20 px de padding + 1 px de borde, a cada lado
+function chartWidth(){
+  const wrap = document.querySelector('.wrap');
+  const inner = wrap ? wrap.clientWidth - PANEL_INNER_OFFSET : 800;
+  return Math.max(600, Math.round(inner));
+}
+function sizeChart(svg, w, h){
+  svg.setAttribute('width', w);
+  svg.setAttribute('height', h);
+  svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+}
+
 function drawChart(precipObj){
   const svg = document.getElementById('chart');
   svg.innerHTML = '';
   const entries = Object.entries(precipObj);
-  const w = 800, h = 220, padL = 34, padB = 26, padT = 10;
+  const w = chartWidth(), h = 220, padL = 34, padB = 26, padT = 10;
+  sizeChart(svg, w, h);
   const max = Math.max(1, ...entries.map(e => e[1]));
   const barW = (w - padL - 10) / entries.length;
 
