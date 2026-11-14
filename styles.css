@@ -635,3 +635,107 @@ input[type="range"] {
 .field input.invalid {
   border-color: var(--red);
 }
+
+/* MODULO 11 - DATOS DEL TERRENO */
+
+.terreno-panel {
+  background: linear-gradient(180deg, #12211a, #17281f);
+  border: 1px solid #294238;
+  border-radius: 12px;
+  padding: 22px;
+}
+
+.terreno-panel > p:not(.source) {
+  font-size: 15px;
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+.terreno-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px 15px;
+}
+
+.terreno-grid .field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+}
+
+.terreno-grid label {
+  color: #a5c5b8;
+  font-size: 12px;
+}
+
+.terreno-grid input,
+.terreno-grid select,
+.terreno-grid textarea {
+  width: 100%;
+  box-sizing: border-box;
+  background: #0b1b14;
+  color: white;
+  border: 1px solid #294238;
+  border-radius: 7px;
+  padding: 12px 13px;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.terreno-grid input,
+.terreno-grid select {
+  min-height: 43px;
+}
+
+.terreno-grid input::placeholder,
+.terreno-grid textarea::placeholder {
+  color: #7e9187;
+}
+
+.terreno-grid .terreno-ancho {
+  grid-column: 1 / -1;
+}
+
+.terreno-grid textarea {
+  min-height: 55px;
+  resize: vertical;
+}
+
+.terreno-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #294238;
+}
+
+.terreno-resultados {
+  margin-top: 18px;
+  line-height: 1.5;
+}
+
+@media (max-width: 700px) {
+  .terreno-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 500px) {
+  .terreno-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .terreno-panel {
+    padding: 16px;
+  }
+
+  .terreno-actions {
+    flex-direction: column;
+  }
+
+  .terreno-actions button {
+    width: 100%;
+  }
+}
