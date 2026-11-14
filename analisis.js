@@ -19,8 +19,21 @@ const PRIORITY_WEIGHTS = {
   agua:        { clima: 0.30, rot: 0.15, agua: 0.40,  suelo: 0.075, erosion: 0.075 },
   suelo:       { clima: 0.30, rot: 0.25, agua: 0.10,  suelo: 0.25,  erosion: 0.10 },
   erosion:     { clima: 0.30, rot: 0.15, agua: 0.10,  suelo: 0.10,  erosion: 0.35 },
-  ingreso:     { clima: 0.40, rot: 0.25, agua: 0.15,  suelo: 0.10,  erosion: 0.10 }, // sin datos de mercado: criterio equilibrado
+  // "ingreso" no está disponible: requiere datos de precios y mercado que el prototipo no tiene
 };
+
+// Temperaturas cardinales, de germinación y de siembra (°C). Solo maíz, soja, alfalfa y sorgo.
+// Fuente: cuadros del equipo, basados en INTA y bibliografía agrometeorológica (no verificados por la app).
+//  base: temperatura base de crecimiento · opt: óptima · max: máxima de desarrollo (referencia orientativa de estrés)
+//  germMin/germOpt: germinación · sow: temperatura del suelo recomendada para sembrar (0–10 cm)
+//  cold: sensibilidad a bajas temperaturas · heat: tolerancia a altas · consec: días seguidos recomendados con suelo ≥ sow[0]
+const CROP_AG = {
+  maiz:    { art: 'el', base: [8, 10],  opt: [25, 32], max: [40, 44], germMin: [8, 10],  germOpt: [25, 30], sow: [16, 18], cold: 'Alta',     heat: 'Media', consec: 0 },
+  soja:    { art: 'la', base: [10, 10], opt: [25, 30], max: [40, 42], germMin: [8, 10],  germOpt: [25, 30], sow: [15, 18], cold: 'Alta',     heat: 'Media', consec: 0 },
+  alfalfa: { art: 'la', base: [1, 5],   opt: [21, 30], max: [40, 45], germMin: [1, 2],   germOpt: [25, 30], sow: [15, 20], cold: 'Baja',     heat: 'Media', consec: 0 },
+  sorgo:   { art: 'el', base: [10, 15], opt: [30, 32], max: [40, 42], germMin: [10, 15], germOpt: [30, 35], sow: [18, 20], cold: 'Muy alta', heat: 'Alta',  consec: 3 },
+};
+const SOIL_EST_DAYS = 5;   // la temperatura del suelo se estima con el promedio de T2M de los últimos 5 días
 
 let lastAnalysis = null;
 let lastCropKey = null;
@@ -149,6 +162,9 @@ function buildAnalysis(data, endDate, recentStart, years, months){
       days: rk.length, rain: rain.sum, rainN: rain.n, temp: temp.avg, hum: hum.avg,
       root: root.avg, top: top.avg, tmin: tmin.avg, tmax: tmax.avg,
       frostDays, heatDays, series,
+      tempDaily: rk.map(k => numAt(P.T2M, k)),
+      tmaxDaily: rk.map(k => numAt(P.T2M_MAX, k)),
+      tminDaily: rk.map(k => numAt(P.T2M_MIN, k)),
     },
     clim, monthly, years, months, spanLabel: span, windowDays: rk.length,
     elev: coords && typeof coords[2] === 'number' ? coords[2] : null,
@@ -167,6 +183,60 @@ function adjustedConditions(rec, sc){
   // Ajuste simple: cada +/-10% de lluvia mueve la humedad de raíces ~ +/-5% (relativo).
   const root = rec.root !== null ? clamp(rec.root * (1 + sc.rainAdj / 100 * 0.5), 0, 1) : null;
   return { root, temp: rec.temp + sc.tempAdj };
+}
+
+/* ---------- chequeos de temperatura de siembra y cardinales (maíz, soja, alfalfa, sorgo) ---------- */
+function agTempChecks(cropKey, rec, tempAdj){
+  const ag = CROP_AG[cropKey];
+  if(!ag || !rec.tempDaily) return null;
+  const c = CROP_DB[cropKey], name = c.label.toLowerCase();
+  const adj = v => v === null ? null : v + tempAdj;
+  const daily = rec.tempDaily.map(adj), tmaxD = rec.tmaxDaily.map(adj), tminD = rec.tminDaily.map(adj);
+  const valid = daily.filter(v => v !== null);
+  if(valid.length < 3) return null;
+
+  const last = valid.slice(-SOIL_EST_DAYS);
+  const soilEst = meanOf(last);
+  const meanT = meanOf(valid);
+  const evidence = [], risks = [], blockers = [];
+
+  evidence.push(`Temperatura del suelo estimada (promedio de T2M de ${last.length} días): <b>${soilEst.toFixed(1)} °C</b> — recomendada para sembrar ${name}: ${ag.sow[0]}–${ag.sow[1]} °C.`);
+  evidence.push(`Temperatura media del período: ${meanT.toFixed(1)} °C — base de crecimiento ${ag.base[0] === ag.base[1] ? ag.base[0] : ag.base[0] + '–' + ag.base[1]} °C, óptima ${ag.opt[0]}–${ag.opt[1]} °C, máxima de desarrollo ${ag.max[0]}–${ag.max[1]} °C (referencia orientativa).`);
+  evidence.push(`Germinación: mínima ${ag.germMin[0]}–${ag.germMin[1]} °C, óptima ${ag.germOpt[0]}–${ag.germOpt[1]} °C.`);
+
+  if(soilEst < ag.sow[0]){
+    blockers.push({ level: 'esperar', text: `el suelo estimado (${soilEst.toFixed(1)} °C) está por debajo de la temperatura recomendada para sembrar ${name} (${ag.sow[0]} °C).` });
+  }
+  if(soilEst < ag.germMin[0]){
+    blockers.push({ level: 'riesgo', text: `con ${soilEst.toFixed(1)} °C la semilla de ${name} no llega a germinar (mínima ${ag.germMin[0]} °C).` });
+  } else if(soilEst < ag.germMin[1]){
+    risks.push(`Temperatura cerca de la mínima de germinación (${ag.germMin[0]}–${ag.germMin[1]} °C): emergencia lenta o despareja.`);
+  }
+  if(ag.consec){
+    let run = 0;
+    for(let i = daily.length - 1; i >= 0; i--){
+      if(daily[i] !== null && daily[i] >= ag.sow[0]) run++; else break;
+    }
+    evidence.push(`Días consecutivos recientes con temperatura ≥ ${ag.sow[0]} °C: <b>${run}</b> (se esperan al menos ${ag.consec} seguidos para una emergencia uniforme).`);
+    if(run < ag.consec){
+      blockers.push({ level: 'esperar', text: `conviene esperar varios días seguidos con suelo entre ${ag.sow[0]} y ${ag.sow[1]} °C para una emergencia uniforme (van ${run}).` });
+    }
+  }
+  const frost = tminD.filter(v => v !== null && v <= FROST_C).length;
+  if(frost > 0){
+    if(ag.cold === 'Alta' || ag.cold === 'Muy alta'){
+      blockers.push({ level: 'riesgo', text: `hubo ${frost} día(s) con helada (T mín ≤ ${FROST_C} °C) y ${ag.art} ${name} tiene sensibilidad ${ag.cold.toLowerCase()} a las bajas temperaturas.` });
+    } else {
+      risks.push(`Hubo ${frost} día(s) con helada; ${ag.art} ${name} tiene sensibilidad ${ag.cold.toLowerCase()} al frío, pero conviene vigilar la implantación.`);
+    }
+  }
+  const belowBase = daily.filter(v => v !== null && v < ag.base[1]).length;
+  if(belowBase > 0) risks.push(`${belowBase} día(s) con temperatura media bajo la base de crecimiento (${ag.base[1]} °C): el cultivo casi no crece.`);
+  const hot = tmaxD.filter(v => v !== null && v >= ag.max[0]).length;
+  if(hot > 0) risks.push(`${hot} día(s) con T máx ≥ ${ag.max[0]} °C (referencia de estrés térmico; tolerancia al calor ${ag.heat.toLowerCase()}).`);
+  if(meanT > ag.opt[1]) risks.push(`La temperatura media supera el óptimo de crecimiento (${ag.opt[1]} °C).`);
+
+  return { evidence, risks, blockers, soilEst };
 }
 
 /* ---------- puntaje de estrategias ---------- */
@@ -237,6 +307,10 @@ function buildStrategyCard(title, key, prevKey, A, adj, sc, highlight){
   if(s.parts.rot >= 0.9) benefits.push('Rotación favorable respecto del cultivo anterior.');
   if(!benefits.length) benefits.push('Sin beneficios de suelo destacados según las reglas del prototipo.');
 
+  const agc = agTempChecks(key, rec, sc.tempAdj);
+  if(agc){
+    agc.evidence.forEach(t => evidence.push(t));
+  }
   const gaps = [
     'Sin datos de suelo de la parcela (textura, materia orgánica, compactación).',
     'Sin precios ni mercado local: el ingreso potencial no está evaluado.',
@@ -251,6 +325,10 @@ function buildStrategyCard(title, key, prevKey, A, adj, sc, highlight){
   if(rec.heatDays > 0 && t1 <= 27) risks.push('Hubo días de calor extremo recientes: riesgo para un cultivo de clima templado.');
   if(prevKey && CROP_DB[prevKey] && (prevKey === key || CROP_DB[prevKey].family === c.family)) risks.push('Misma familia que el cultivo anterior: mayor presión de plagas y enfermedades.');
   if(s.legume) risks.push('Conviene validar inoculante y cepa de rizobios adecuados para la zona.');
+  if(agc){
+    agc.blockers.forEach(b => risks.push(b.text.charAt(0).toUpperCase() + b.text.slice(1)));
+    agc.risks.forEach(t => risks.push(t));
+  }
   risks.push('Validar con un agrónomo o técnico local antes de decidir.');
 
   const bar = (label, v) => `<div class="bar"><span>${label}</span><div class="bar-track"><i style="width:${pct(v)}%"></i></div></div>`;
@@ -278,26 +356,33 @@ function renderStrategies(A, adj, sc){
   const prevForRank = known ? prevKey : 'ninguno';
 
   const picks = [];
-  picks.push({ title: known ? 'Actual · repetir cultivo anterior' : 'Actual · sin rotación', key: known ? prevKey : cropKey, prev: known ? prevKey : cropKey });
+  // La tarjeta "repetir cultivo anterior" solo tiene sentido si se informó uno y es distinto
+  // del elegido; si no, sería la misma opción duplicada.
+  if(known && prevKey !== cropKey){
+    picks.push({ title: 'Actual · repetir cultivo anterior', key: prevKey, prev: prevKey });
+  }
   picks.push({ title: 'Tu opción elegida', key: cropKey, prev: prevKey, main: true });
 
   const optionKeys = Array.prototype.map.call(document.getElementById('crop').options, o => o.value).filter(k => CROP_DB[k]);
-  const used = new Set([picks[0].key, cropKey]);
+  const used = new Set(picks.map(p => p.key));
   const ranked = optionKeys.filter(k => !used.has(k))
     .map(k => ({ k, s: scoreCrop(k, prevForRank, soil, adj.temp, sc.priority).total }))
     .sort((a, b) => b.s - a.s);
-  if(ranked.length){
-    const A1 = ranked[0].k;
-    picks.push({ title: 'Alternativa A', key: A1, prev: prevForRank });
-    const famA = CROP_DB[A1].family;
-    const B = ranked.slice(1).find(r => CROP_DB[r.k].family !== famA) || ranked[1];
-    if(B) picks.push({ title: 'Alternativa B', key: B.k, prev: prevForRank });
-  }
 
-  const prioNote = sc.priority === 'ingreso'
-    ? 'Prioridad «ingreso extra»: este prototipo no tiene datos de mercado, por lo que se usa el criterio equilibrado.'
-    : 'Prioridad aplicada: ' + document.getElementById('priority').selectedOptions[0].textContent + '.';
-  document.getElementById('strategyNote').textContent = prioNote;
+  // Alternativas: la mejor puntuada y, después, las mejores de familias botánicas distintas
+  // (se completan con las siguientes del ranking si no hay más familias)
+  const altCount = 4 - picks.length;
+  const alts = [];
+  const fams = new Set();
+  ranked.forEach(r => {
+    if(alts.length < altCount && !fams.has(CROP_DB[r.k].family)){ alts.push(r); fams.add(CROP_DB[r.k].family); }
+  });
+  ranked.forEach(r => { if(alts.length < altCount && alts.indexOf(r) < 0) alts.push(r); });
+  alts.forEach((r, i) => picks.push({ title: 'Alternativa ' + 'ABC'[i], key: r.k, prev: prevForRank }));
+
+  const noPrev = known ? '' : ' No informaste cultivo anterior: la rotación se puntúa como neutra.';
+  document.getElementById('strategyNote').textContent =
+    'Prioridad aplicada: ' + document.getElementById('priority').selectedOptions[0].textContent + '.' + noPrev;
   document.getElementById('strategyGrid').innerHTML = picks.map(p => buildStrategyCard(p.title, p.key, p.prev, A, adj, sc, p.main)).join('');
 }
 
@@ -362,9 +447,23 @@ function renderCrop(A, adj, sc){
     document.getElementById('rotationNote').innerHTML = '';
   } else {
     const r = evaluateCrop(lastCropKey, lastPrevKey, adj.root, adj.temp);
-    dot.style.background = r.dotColor; dot.style.color = '#0c1712'; dot.textContent = r.dotLabel;
-    document.getElementById('cropVerdictText').innerHTML = r.verdict;
-    document.getElementById('cropChecklist').innerHTML = r.checklist.map(c => `<div class="verdict-text" style="margin-bottom:6px;">• ${c}</div>`).join('') + scenarioTxt;
+    const agc = agTempChecks(lastCropKey, A.recent, sc.tempAdj);
+    let dotColor = r.dotColor, dotLabel = r.dotLabel, verdict = r.verdict;
+    let items = r.checklist.slice();
+    if(agc){
+      const hard = agc.blockers.filter(b => b.level === 'riesgo');
+      const soft = agc.blockers.filter(b => b.level === 'esperar');
+      if(hard.length){ dotColor = 'var(--red)'; dotLabel = 'RIESGO'; }
+      else if(soft.length && dotLabel === 'SEMBRAR'){ dotColor = 'var(--amber)'; dotLabel = 'ESPERAR'; }
+      if(agc.blockers.length){
+        const extra = agc.blockers.map(b => b.text).join(' Además, ');
+        verdict = r.verdict.replace(' Es un buen momento para sembrar.', '') + ` Ojo: ${extra}`;
+      }
+      items = items.concat(agc.evidence, agc.risks.map(t => '⚠ ' + t));
+    }
+    dot.style.background = dotColor; dot.style.color = '#0c1712'; dot.textContent = dotLabel;
+    document.getElementById('cropVerdictText').innerHTML = verdict;
+    document.getElementById('cropChecklist').innerHTML = items.map(c => `<div class="verdict-text" style="margin-bottom:6px;">• ${c}</div>`).join('') + scenarioTxt;
     document.getElementById('rotationNote').innerHTML = r.rotationHtml;
   }
   document.getElementById('cropPanel').style.display = 'block';
@@ -435,6 +534,8 @@ function renderAnnual(A){
 function renderGaps(A){
   const items = [
     'Humedad de suelo: es la modelada por NASA POWER (GWETROOT/GWETTOP), no una medición satelital puntual de SMAP. Las capas SMAP del mapa sirven como referencia visual.',
+    'Temperatura del suelo: NASA POWER no la entrega a 10 cm. Para maíz, soja, alfalfa y sorgo se estima con el promedio de la temperatura del aire de los últimos 5 días; conviene medirla en la parcela.',
+    'Solo maíz, soja, alfalfa y sorgo tienen temperaturas de siembra, germinación y cardinales (cuadros del equipo basados en INTA y bibliografía). Los demás cultivos usan un rango aproximado. El requisito de 3 días seguidos para el sorgo es un supuesto del prototipo.',
     'Suelo de la parcela (textura, materia orgánica, drenaje, compactación): no está incluido. Requiere análisis local o bases como Web Soil Survey/SSURGO (EE. UU.).',
     'Erosión y pendiente: no se calcula con SRTM; la erosión se estima solo por el tipo de cultivo (cobertura/perennes).',
     'Mercado e ingresos: sin datos de precios ni demanda local.',
@@ -468,6 +569,27 @@ function renderAll(){
   document.getElementById('chartPanel').style.display = 'block';
   renderGaps(A);
   document.getElementById('terrenoPanel').style.display = 'block';
+}
+
+const RESULT_PANELS = ['resultPanel','statsPanel','cropPanel','strategyPanel','annualPanel','chartPanel','gapsPanel'];
+
+// Los datos de NASA POWER son de un punto: si el punto cambia, los resultados ya no valen
+function invalidateAnalysis(){
+  if(!lastRaw && !lastAnalysis) return;
+  lastRaw = null; lastAnalysis = null;
+  RESULT_PANELS.forEach(id => { document.getElementById(id).style.display = 'none'; });
+  document.getElementById('status').textContent = 'Cambiaste la ubicación: presioná «Analizar parcela» para consultar los datos del nuevo punto.';
+}
+
+// Cambiar el cultivo no requiere volver a consultar: los datos climáticos son los mismos
+function onCropChange(){
+  if(!lastAnalysis) return;
+  const cropKey = document.getElementById('crop').value;
+  if(!CROP_DB[cropKey]) return;
+  lastCropKey = cropKey;
+  lastPrevKey = document.getElementById('prevCrop').value;
+  renderAll();
+  document.getElementById('status').textContent = 'Recalculado para ' + CROP_DB[cropKey].label + ' (sin nueva consulta).';
 }
 
 function setAnalysis(A, cropKey, prevKey){
@@ -601,6 +723,8 @@ document.addEventListener('DOMContentLoaded', () => {
   };
   [rainEl, tempEl].forEach(el => el.addEventListener('input', () => { refreshLabels(); renderAll(); }));
   document.getElementById('priority').addEventListener('change', renderAll);
+  document.getElementById('crop').addEventListener('change', onCropChange);
+  document.getElementById('prevCrop').addEventListener('change', onCropChange);
   ['climYears', 'climMonths'].forEach(id => {
     const el = document.getElementById(id);
     // Solo números: se descarta cualquier otro carácter mientras se escribe o se pega

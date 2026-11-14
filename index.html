@@ -33,6 +33,7 @@
       </div>
       <button id="searchBtn">Buscar</button>
     </div>
+    <div class="search-status" id="searchStatus" role="status"></div>
 
     <div class="layer-bar">
       <label for="gibsLayer">Capa satelital NASA (referencia visual)</label>
@@ -110,7 +111,7 @@
           <option value="agua">Ahorrar agua</option>
           <option value="suelo">Mejorar la estructura y fertilidad del suelo</option>
           <option value="erosion">Reducir la erosión</option>
-          <option value="ingreso">Ingreso extra (sin datos de mercado)</option>
+          <option value="ingreso" disabled>Ingreso extra — próximamente (requiere datos de mercado)</option>
         </select>
       </div>
     </div>
@@ -174,7 +175,7 @@
     </div>
     <div id="cropChecklist" style="margin-top:16px;"></div>
     <div id="rotationNote" style="margin-top:14px;"></div>
-    <details class="source-box"><summary>Fuente</summary><div class="source-box-body">FAO + rangos agronómicos de referencia (no reemplaza asesoramiento profesional)</div></details>
+    <details class="source-box"><summary>Fuente</summary><div class="source-box-body">FAO + rangos agronómicos de referencia. Temperaturas de siembra, germinación y cardinales de maíz, soja, alfalfa y sorgo: INTA y bibliografía agrometeorológica, según los cuadros del equipo (no reemplaza asesoramiento profesional)</div></details>
   </div>
 
   <div class="panel" id="strategyPanel" style="display:none;">
