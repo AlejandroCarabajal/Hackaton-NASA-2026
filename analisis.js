@@ -44,12 +44,17 @@ function statsOver(obj, keys){
 function shiftKey(key, years){ return String(parseInt(key.slice(0, 4), 10) + years) + key.slice(4); }
 
 /* ---------- análisis de datos NASA POWER ---------- */
-function buildAnalysis(data, endDate, recentStart, years){
+function buildAnalysis(data, endDate, recentStart, years, months){
   const P = data && data.properties && data.properties.parameter;
   if(!P || !P.PRECTOTCORR || !P.T2M) return null;
+  months = months || 0;
 
-  const minYear = endDate.getFullYear() - years;
-  const all = Object.keys(P.PRECTOTCORR).filter(k => parseInt(k.slice(0, 4), 10) >= minYear).sort();
+  // Lapso del promedio histórico: años + meses hacia atrás desde la fecha final
+  const spanStart = histSpanStart(endDate, years, months);
+  const winLen = Math.round((endDate - recentStart) / 86400000) + 1;
+  const dataStart = new Date(spanStart); dataStart.setDate(dataStart.getDate() - winLen);
+  const ds = fmtDate(dataStart), ss = fmtDate(spanStart);
+  const all = Object.keys(P.PRECTOTCORR).filter(k => k >= ds).sort();
   const rs = fmtDate(recentStart), re = fmtDate(endDate);
   const rk = all.filter(k => k >= rs && k <= re);
 
@@ -74,7 +79,29 @@ function buildAnalysis(data, endDate, recentStart, years){
     const g = statsOver(P.GWETROOT, ks);
     if(g.n >= rk.length - 1) yearsRoot.push(g.avg);
   }
-  const clim = { n: yearsRain.length };
+  // Con menos de 3 años no alcanza para comparar "mismas fechas": se usan períodos
+  // consecutivos del mismo largo dentro del lapso histórico (sin corrección estacional).
+  let mode = 'anual';
+  if(yearsRain.length < 3){
+    mode = 'bloques';
+    yearsRain.length = 0; yearsRoot.length = 0;
+    const prior = all.filter(k => k >= ss && k < rs);
+    for(let e = prior.length; e - rk.length >= 0; e -= rk.length){
+      const ks = prior.slice(e - rk.length, e);
+      const r = statsOver(P.PRECTOTCORR, ks);
+      if(r.n >= rk.length - 1) yearsRain.push(r.sum);
+      const g = statsOver(P.GWETROOT, ks);
+      if(g.n >= rk.length - 1) yearsRoot.push(g.avg);
+    }
+  }
+  const span = spanLabel(years, months);
+  const clim = {
+    n: yearsRain.length, mode,
+    refShort: mode === 'anual' ? `${yearsRain.length} años` : span,
+    refLong: mode === 'anual'
+      ? `el promedio de ${yearsRain.length} años para estas fechas`
+      : `el promedio de ${yearsRain.length} períodos de ${rk.length} días en ${lastSpanLabel(years, months)}`,
+  };
   if(yearsRain.length >= 3){
     clim.rainMean = meanOf(yearsRain);
     clim.rainStd = stdOf(yearsRain);
@@ -123,7 +150,7 @@ function buildAnalysis(data, endDate, recentStart, years){
       root: root.avg, top: top.avg, tmin: tmin.avg, tmax: tmax.avg,
       frostDays, heatDays, series,
     },
-    clim, monthly, years, windowDays: rk.length,
+    clim, monthly, years, months, spanLabel: span, windowDays: rk.length,
     elev: coords && typeof coords[2] === 'number' ? coords[2] : null,
   };
 }
@@ -198,7 +225,7 @@ function buildStrategyCard(title, key, prevKey, A, adj, sc, highlight){
   if(adj.root !== null) evidence.push(`Humedad de suelo (raíces, NASA POWER GWETROOT): ${pct(adj.root)}% — rango de ${c.label}: ${pct(m0)}–${pct(m1)}%.`);
   evidence.push(`Temperatura media (NASA POWER T2M): ${adj.temp.toFixed(1)} °C — rango: ${t0}–${t1} °C.`);
   if(A.clim.rainDiffPct !== undefined && A.clim.rainDiffPct !== null){
-    evidence.push(`Lluvia ${rec.days} d: ${rec.rain.toFixed(0)} mm (${A.clim.rainDiffPct >= 0 ? '+' : ''}${A.clim.rainDiffPct}% vs media de ${A.clim.n} años).`);
+    evidence.push(`Lluvia ${rec.days} d: ${rec.rain.toFixed(0)} mm (${A.clim.rainDiffPct >= 0 ? '+' : ''}${A.clim.rainDiffPct}% vs media de ${A.clim.refShort}).`);
   }
   if(rec.frostDays > 0) evidence.push(`${rec.frostDays} día(s) con T mín ≤ ${FROST_C} °C en los últimos ${rec.days} días.`);
 
@@ -281,7 +308,7 @@ function renderWater(A){
   const rd = clim.rainDiffPct;
   const tempTxt = rec.temp.toFixed(1);
   if(rd !== undefined && rd !== null){
-    const base = `Tu zona recibió <b>${rec.rain.toFixed(0)} mm</b> en ${rec.days} días (${rd >= 0 ? '+' : ''}${rd}% vs el promedio de ${clim.n} años para estas fechas; percentil ${clim.rainPctile}).`;
+    const base = `Tu zona recibió <b>${rec.rain.toFixed(0)} mm</b> en ${rec.days} días (${rd >= 0 ? '+' : ''}${rd}% vs ${clim.refLong}; percentil ${clim.rainPctile}).`;
     if(rd <= -40){ color = 'var(--red)'; label = 'SECO'; text = `${base} Con temperatura media de ${tempTxt} °C, conviene revisar el riego esta semana.`; }
     else if(rd <= -15){ color = 'var(--amber)'; label = 'ATENCIÓN'; text = `${base} Vale la pena monitorear los próximos días.`; }
     else { color = 'var(--leaf)'; label = 'OK'; text = `${base} Sin señales de estrés hídrico por ahora.`; }
@@ -308,7 +335,7 @@ function renderStats(A){
     `<div class="stat"><div class="label">${label}</div><div class="value"${color ? ` style="color:${color}"` : ''}>${value}<span class="unit"> ${unit || ''}</span></div></div>`;
   let h = '';
   h += cell(`Lluvia acumulada (${rec.days} d)`, rec.rain.toFixed(1), 'mm');
-  h += cell(`Lluvia media (${clim.n || 0} años)`, clim.rainMean !== undefined ? clim.rainMean.toFixed(1) : 's/d', 'mm');
+  h += cell(`Lluvia media (${clim.rainMean !== undefined ? clim.refShort : 's/d'})`, clim.rainMean !== undefined ? clim.rainMean.toFixed(1) : 's/d', 'mm');
   h += cell('Anomalía de lluvia', diff === undefined || diff === null ? 's/d' : (diff >= 0 ? '+' : '') + diff + '%', '', diff !== undefined && diff !== null && diff < 0 ? 'var(--red)' : 'var(--leaf)');
   h += cell('Percentil de lluvia', clim.rainPctile !== undefined ? clim.rainPctile : 's/d', '');
   h += cell('Temp. promedio', f1(rec.temp), '°C');
@@ -415,8 +442,10 @@ function renderGaps(A){
     'Las reglas de rotación y los rangos de humedad/temperatura de cada cultivo son aproximados, no un modelo de rendimiento.',
     'Dónde hace falta criterio humano: decisión final de siembra, elección de variedad, manejo del riego y sanidad.',
   ];
-  if(A.clim.n < A.years) items.unshift(`Climatología con solo ${A.clim.n} años válidos (se pidieron ${A.years}): menor confianza en las anomalías.`);
-  if(A.years < 5) items.unshift(`El promedio usa solo ${A.years} años: refleja el clima reciente pero es poco estable. Probá con 10 o más.`);
+  if(A.clim.mode === 'anual' && A.clim.n < A.years) items.unshift(`Climatología con solo ${A.clim.n} años válidos (se pidieron ${A.years}): menor confianza en las anomalías.`);
+  if(A.clim.n < 3) items.unshift(`El promedio histórico (${A.spanLabel}) es demasiado corto para compararlo con los últimos ${A.windowDays} días: agregá más meses o años.`);
+  else if(A.clim.mode === 'bloques') items.unshift(`El promedio histórico (${A.spanLabel}) no llega a 3 años: se compara contra períodos consecutivos de ${A.windowDays} días dentro de ese lapso, sin corregir por la época del año. Refleja el clima reciente pero es poco estable.`);
+  else if(A.years < 5) items.unshift(`El promedio usa solo ${A.spanLabel}: refleja el clima reciente pero es poco estable. Probá con 10 años o más.`);
   if(A.recent.rainN < A.recent.days) items.unshift(`Faltan ${A.recent.days - A.recent.rainN} día(s) de lluvia en el período reciente.`);
   document.getElementById('gapsList').innerHTML = items.map(t => `<li>${t}</li>`).join('');
   document.getElementById('gapsPanel').style.display = 'block';
@@ -442,43 +471,75 @@ function renderAll(){
 
 function setAnalysis(A, cropKey, prevKey){
   lastAnalysis = A; lastCropKey = cropKey; lastPrevKey = prevKey;
-  updatePeriodLabels(A.years, getAverageSettings().months, A.windowDays);
+  updatePeriodLabels(A.spanLabel, A.windowDays);
   renderAll();
 }
 
 /* ---------- período del promedio configurable ---------- */
-let lastRaw = null;   // { data, end, years }: respuesta de NASA POWER en memoria
+let lastRaw = null;   // { data, end, start }: respuesta de NASA POWER en memoria
+
+const CLIM_HELP = 'Años: de 0 a 30 · Meses: de 0 a 12. Con 0 años, indicá al menos 1 mes.';
+
+function spanLabel(years, months){
+  const y = years ? `${years} ${years === 1 ? 'año' : 'años'}` : '';
+  const m = months ? `${months} ${months === 1 ? 'mes' : 'meses'}` : '';
+  return y && m ? `${y} y ${m}` : (y || m);
+}
+function lastSpanLabel(years, months){
+  if(years === 1 && !months) return 'el último año';
+  if(!years && months === 1) return 'el último mes';
+  return 'los últimos ' + spanLabel(years, months);
+}
 
 function getAverageSettings(){
   const yearEl = document.getElementById('climYears');
-  const monthEl = document.getElementById('windowDays');
-  const years = Number(yearEl.value), months = Number(monthEl.value);
-  if (!Number.isInteger(years) || years < 1 || years > 30 ||
-      !Number.isInteger(months) || months < 1 || months > 12) {
-    throw new Error('Ingresá entre 1 y 30 años y entre 1 y 12 meses (números enteros).');
-  }
-  return { years, months };
+  const monthEl = document.getElementById('climMonths');
+  const helpEl = document.getElementById('climHelp');
+  const parse = el => { const v = el.value.trim(); return v === '' ? 0 : (/^\d+$/.test(v) ? Number(v) : NaN); };
+  const years = parse(yearEl), months = parse(monthEl);
+  const badY = !(years >= 0 && years <= 30), badM = !(months >= 0 && months <= 12);
+  const none = !badY && !badM && years === 0 && months === 0;
+  let msg = '';
+  if(badY) msg = 'Los años del promedio histórico deben ser un número entre 0 y 30.';
+  else if(badM) msg = 'Los meses del promedio histórico deben ser un número entre 0 y 12.';
+  else if(none) msg = 'Con 0 años tenés que indicar al menos 1 mes de promedio histórico.';
+  yearEl.classList.toggle('invalid', badY);
+  monthEl.classList.toggle('invalid', badM || none);
+  helpEl.textContent = msg || CLIM_HELP;
+  helpEl.classList.toggle('error', !!msg);
+  if(msg) throw new Error(msg);
+  const days = parseInt(document.getElementById('windowDays').value, 10) || 14;
+  return { years, months, days };
 }
-function cacheRaw(data, end, years){ lastRaw = { data, end, years }; }
+function cacheRaw(data, end, start){ lastRaw = { data, end, start }; }
 
-function startOfRecentMonths(end, months){
-  // Meses calendario completos hacia atrás, incluyendo el día final.
+function histSpanStart(end, years, months){
+  // Años + meses calendario hacia atrás desde la fecha final.
   const start = new Date(end);
   const day = start.getDate();
   start.setDate(1);
-  start.setMonth(start.getMonth() - months);
+  start.setMonth(start.getMonth() - (years * 12 + months));
   // Si el mes no tiene ese día, usar su último día.
   const lastDay = new Date(start.getFullYear(), start.getMonth() + 1, 0).getDate();
   start.setDate(Math.min(day, lastDay));
-  start.setDate(start.getDate() + 1);
   return start;
 }
-function analyzeRaw(raw, years, months){
-  return buildAnalysis(raw.data, raw.end, startOfRecentMonths(raw.end, months), years);
+function recentStartFor(end, days){
+  const start = new Date(end);
+  start.setDate(start.getDate() - (days - 1));
+  return start;
 }
-function updatePeriodLabels(years, months, days){
-  document.querySelectorAll('.clim-years').forEach(e => { e.textContent = years; });
-  document.querySelectorAll('.win-months').forEach(e => { e.textContent = months; });
+function fetchStartFor(end, st){
+  // Primer día que hay que pedirle a NASA POWER: inicio del lapso histórico menos una ventana reciente.
+  const start = histSpanStart(end, st.years, st.months);
+  start.setDate(start.getDate() - st.days);
+  return start;
+}
+function analyzeRaw(raw, st){
+  return buildAnalysis(raw.data, raw.end, recentStartFor(raw.end, st.days), st.years, st.months);
+}
+function updatePeriodLabels(span, days){
+  document.querySelectorAll('.clim-span').forEach(e => { e.textContent = span; });
   if(days != null) document.querySelectorAll('.win-days').forEach(e => { e.textContent = days; });
 }
 function onAverageSettingsChange(){
@@ -486,18 +547,17 @@ function onAverageSettingsChange(){
   let st;
   try { st = getAverageSettings(); }
   catch(err){ statusEl.textContent = err.message; return; }
-  updatePeriodLabels(st.years, st.months);
-  if(!lastRaw) return;
-  const recentStart = startOfRecentMonths(lastRaw.end, st.months);
-  const earliestCached = new Date(lastRaw.end.getFullYear() - lastRaw.years, 0, 1);
-  if(st.years > lastRaw.years || recentStart < earliestCached){
+  const span = spanLabel(st.years, st.months);
+  updatePeriodLabels(span, st.days);
+  if(!lastRaw){ statusEl.textContent = ''; return; }
+  if(fetchStartFor(lastRaw.end, st) < lastRaw.start){
     document.getElementById('run').click();
     return;
   }
-  const A = analyzeRaw(lastRaw, st.years, st.months);
+  const A = analyzeRaw(lastRaw, st);
   if(!A){ statusEl.textContent = 'No hay datos válidos para ese período.'; return; }
   setAnalysis(A, lastCropKey, lastPrevKey);
-  statusEl.textContent = `Recalculado con ${st.years} años de climatología y ${st.months} mes(es) recientes (sin nueva consulta).`;
+  statusEl.textContent = `Recalculado con promedio histórico de ${span} y últimos ${st.days} días (sin nueva consulta).`;
 }
 
 /* ---------- capas NASA GIBS ---------- */
@@ -539,12 +599,17 @@ document.addEventListener('DOMContentLoaded', () => {
   };
   [rainEl, tempEl].forEach(el => el.addEventListener('input', () => { refreshLabels(); renderAll(); }));
   document.getElementById('priority').addEventListener('change', renderAll);
-  document.getElementById('climYears').addEventListener('change', onAverageSettingsChange);
+  ['climYears', 'climMonths'].forEach(id => {
+    const el = document.getElementById(id);
+    // Solo números: se descarta cualquier otro carácter mientras se escribe o se pega
+    el.addEventListener('input', () => { const v = el.value.replace(/\D/g, ''); if(v !== el.value) el.value = v; });
+    el.addEventListener('change', onAverageSettingsChange);
+  });
   document.getElementById('windowDays').addEventListener('change', onAverageSettingsChange);
   document.getElementById('resetScenario').addEventListener('click', () => {
     rainEl.value = 0; tempEl.value = 0; refreshLabels(); renderAll();
   });
   refreshLabels();
   const st0 = getAverageSettings();
-  updatePeriodLabels(st0.years, st0.months);
+  updatePeriodLabels(spanLabel(st0.years, st0.months), st0.days);
 });

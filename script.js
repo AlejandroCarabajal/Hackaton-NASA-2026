@@ -747,16 +747,18 @@ runBtn.addEventListener('click', async () => {
     .forEach(id => { document.getElementById(id).style.display = 'none'; });
 
   try {
-    const { years, months } = getAverageSettings();
+    let st;
+    try { st = getAverageSettings(); }
+    catch(err){ statusEl.textContent = err.message; return; }
     const today = new Date();
     const end = new Date(today); end.setDate(end.getDate() - 3);
-    const histStart = new Date(end.getFullYear() - years - 1, 0, 1);
+    const histStart = fetchStartFor(end, st);
 
-    statusEl.textContent = `Consultando últimos ${months} mes(es) y climatología de ${years} años…`;
+    statusEl.textContent = `Consultando últimos ${st.days} días y promedio histórico de ${spanLabel(st.years, st.months)}…`;
     const data = await fetchPower(lat, lon, fmtDate(histStart), fmtDate(end));
 
-    cacheRaw(data, end, years);
-    const analysis = analyzeRaw(lastRaw, years, months);
+    cacheRaw(data, end, histStart);
+    const analysis = analyzeRaw(lastRaw, st);
     if(!analysis){
       throw new Error('NASA POWER no devolvió datos válidos para este punto (¿océano o fuera de cobertura?)');
     }

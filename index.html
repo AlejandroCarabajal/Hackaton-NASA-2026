@@ -103,15 +103,23 @@
     <div class="row" style="margin-top:14px;">
       <div class="field">
         <label for="climYears">Años del promedio histórico</label>
-        <input id="climYears" type="number" min="1" max="30" step="1" value="10" inputmode="numeric" aria-describedby="climYearsHelp" />
-        <small id="climYearsHelp">Ingresá entre 1 y 30 años.</small>
+        <input id="climYears" type="text" inputmode="numeric" maxlength="2" value="10" autocomplete="off" aria-describedby="climHelp" />
+      </div>
+      <div class="field">
+        <label for="climMonths">Meses del promedio histórico</label>
+        <input id="climMonths" type="text" inputmode="numeric" maxlength="2" value="0" autocomplete="off" aria-describedby="climHelp" />
       </div>
       <div class="field">
         <label for="windowDays">Período reciente a comparar</label>
-        <input id="windowDays" type="number" min="1" max="12" step="1" value="1" inputmode="numeric" aria-describedby="windowMonthsHelp" />
-        <small id="windowMonthsHelp">Ingresá entre 1 y 12 meses.</small>
+        <select id="windowDays">
+          <option value="7">Últimos 7 días</option>
+          <option value="14" selected>Últimos 14 días</option>
+          <option value="21">Últimos 21 días</option>
+          <option value="30">Últimos 30 días</option>
+        </select>
       </div>
     </div>
+    <small id="climHelp" class="field-help" role="status" aria-live="polite"></small>
     <div class="row" style="margin-top:14px;">
       <div class="field">
         <label for="rainAdj">Escenario de lluvia: <b id="rainAdjVal">0%</b></label>
@@ -123,7 +131,7 @@
       </div>
       <button id="resetScenario" type="button" class="btn-ghost">Restablecer</button>
     </div>
-    <div class="source">Las prioridades reordenan la comparación de estrategias. Más años dan un promedio más estable; menos años reflejan mejor el clima reciente. Al cambiar los años o meses se recalcula el análisis; cuando hacen falta datos adicionales, se consulta nuevamente NASA POWER. Los deslizadores aplican un ajuste simple sobre las condiciones actuales (no es un pronóstico). Se actualizan sin volver a consultar NASA POWER.</div>
+    <div class="source">Las prioridades reordenan la comparación de estrategias. Más años dan un promedio más estable; menos años reflejan mejor el clima reciente. Al cambiar los años, los meses o el período reciente se recalcula el análisis; cuando hacen falta datos adicionales, se consulta nuevamente NASA POWER. Los deslizadores aplican un ajuste simple sobre las condiciones actuales (no es un pronóstico). Se actualizan sin volver a consultar NASA POWER.</div>
   </div>
 
   <button id="run" style="width:100%;margin:0 0 16px;">Analizar parcela</button>
@@ -135,11 +143,11 @@
       <div class="dot" id="dot">--</div>
       <div class="verdict-text" id="verdictText"></div>
     </div>
-    <div class="source">Fuente: NASA POWER (precipitación, temperatura, humedad) comparado con la climatología de <span class="clim-years">10</span> años</div>
+    <div class="source">Fuente: NASA POWER (precipitación, temperatura, humedad) comparado con la climatología de <span class="clim-span">10 años</span></div>
   </div>
 
   <div class="panel" id="statsPanel" style="display:none;">
-    <div class="panel-title">05 — Últimos <span class="win-months">1</span> mes(es) vs. climatología (promedio de <span class="clim-years">10</span> años)</div>
+    <div class="panel-title">05 — Últimos <span class="win-days">14</span> días vs. climatología (promedio de <span class="clim-span">10 años</span>)</div>
     <div class="grid" id="statsGrid"></div>
     <div class="source">Fuente: NASA POWER API (datos diarios, AG community). Promedio histórico: mismo período calendario en los años elegidos. Heladas: T mín ≤ 2 °C. Calor extremo: T máx ≥ 35 °C</div>
   </div>
@@ -163,7 +171,7 @@
   </div>
 
   <div class="panel" id="annualPanel" style="display:none;">
-    <div class="panel-title">08 — Calendario climático anual (promedio de <span class="clim-years">10</span> años)</div>
+    <div class="panel-title">08 — Calendario climático anual (promedio de <span class="clim-span">10 años</span>)</div>
     <div class="chart-wrap"><svg id="annualChart" width="800" height="270" viewBox="0 0 800 270"></svg></div>
     <div class="annual-legend">
       <span><i style="background:#4aa3df"></i>Lluvia mensual (mm)</span>
@@ -178,7 +186,7 @@
   </div>
 
   <div class="panel" id="chartPanel" style="display:none;">
-    <div class="panel-title">09 — Precipitación diaria (mm) — últimos <span class="win-months">1</span> mes(es)</div>
+    <div class="panel-title">09 — Precipitación diaria (mm) — últimos <span class="win-days">14</span> días</div>
     <div class="chart-wrap"><svg id="chart" width="800" height="220" viewBox="0 0 800 220"></svg></div>
     <div class="source">Fuente: NASA POWER API (PRECTOTCORR)</div>
   </div>
