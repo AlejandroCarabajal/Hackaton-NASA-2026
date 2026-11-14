@@ -21,7 +21,7 @@
 
 
 
-  <p class="sub">Consulta datos climáticos reales de la <strong>API pública de NASA POWER</strong> para una parcela y compara la última semana contra el promedio histórico del mismo período.</p>
+  <p class="sub">Consulta datos climáticos reales de la <strong>API pública de NASA POWER</strong> para una parcela y compara el período reciente contra el promedio histórico (que vos configurás) y evalúa estrategias de rotación según tus prioridades.</p>
 
   <div class="panel">
     <div class="panel-title">01 — Ubicación de la parcela</div>
@@ -31,7 +31,18 @@
       <button id="searchBtn">Buscar</button>
     </div>
 
+    <div class="layer-bar">
+      <label for="gibsLayer">Capa satelital NASA (referencia visual)</label>
+      <select id="gibsLayer">
+        <option value="">Sin capa (solo imagen base)</option>
+        <option value="ndvi">Vegetación — NDVI (MODIS)</option>
+        <option value="smap">Humedad del suelo (SMAP)</option>
+        <option value="imerg">Precipitación (GPM IMERG)</option>
+        <option value="lst">Temperatura superficial (MODIS)</option>
+      </select>
+    </div>
     <div id="map"></div>
+    <div class="layer-note" id="gibsNote"></div>
 
     <div class="country-badge" id="countryBadge">Seleccioná un punto en el mapa</div>
 
@@ -50,7 +61,7 @@
       </div>
     </div>
 
-    <div class="source">Fuente: OpenStreetMap Nominatim (geocoding), NASA GIBS (imaginería satelital)</div>
+    <div class="source">Fuente: OpenStreetMap Nominatim (geocodificación), Esri World Imagery (base), capas opcionales de NASA GIBS (SMAP, GPM IMERG, MODIS)</div>
   </div>
 
   <div class="panel">
@@ -74,23 +85,73 @@
     <div class="source">Fuente: FAO Crop Calendar + base de datos agronómica de referencia</div>
   </div>
 
+  <div class="panel">
+    <div class="panel-title">03 — Prioridades y escenario</div>
+    <div class="row">
+      <div class="field">
+        <label for="priority">¿Qué priorizás?</label>
+        <select id="priority">
+          <option value="equilibrado">Equilibrado</option>
+          <option value="agua">Ahorrar agua</option>
+          <option value="suelo">Mejorar la estructura y fertilidad del suelo</option>
+          <option value="erosion">Reducir la erosión</option>
+          <option value="ingreso">Ingreso extra (sin datos de mercado)</option>
+        </select>
+      </div>
+    </div>
+    <div class="row" style="margin-top:14px;">
+      <div class="field">
+        <label for="climYears">Años del promedio histórico</label>
+        <select id="climYears">
+          <option value="3">3 años</option>
+          <option value="5">5 años</option>
+          <option value="10" selected>10 años</option>
+          <option value="15">15 años</option>
+          <option value="20">20 años</option>
+          <option value="30">30 años</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="windowDays">Período reciente a comparar</label>
+        <select id="windowDays">
+          <option value="7">Últimos 7 días</option>
+          <option value="14" selected>Últimos 14 días</option>
+          <option value="21">Últimos 21 días</option>
+          <option value="30">Últimos 30 días</option>
+        </select>
+      </div>
+    </div>
+    <div class="row" style="margin-top:14px;">
+      <div class="field">
+        <label for="rainAdj">Escenario de lluvia: <b id="rainAdjVal">0%</b></label>
+        <input id="rainAdj" type="range" min="-40" max="40" step="5" value="0" />
+      </div>
+      <div class="field">
+        <label for="tempAdj">Escenario de temperatura: <b id="tempAdjVal">0 °C</b></label>
+        <input id="tempAdj" type="range" min="-3" max="4" step="0.5" value="0" />
+      </div>
+      <button id="resetScenario" type="button" class="btn-ghost">Restablecer</button>
+    </div>
+    <div class="source">Las prioridades reordenan la comparación de estrategias. Más años dan un promedio más estable; menos años reflejan mejor el clima reciente. Al cambiar el período se recalcula al instante (si pedís más años de los ya consultados, se vuelve a consultar NASA POWER). Los deslizadores aplican un ajuste simple sobre las condiciones actuales (no es un pronóstico). Se actualizan sin volver a consultar NASA POWER.</div>
+  </div>
+
   <div class="panel" id="resultPanel" style="display:none;">
-    <div class="panel-title">03 — Estado hídrico general</div>
+    <div class="panel-title">04 — Estado hídrico general</div>
     <div class="semaforo">
       <div class="dot" id="dot">--</div>
       <div class="verdict-text" id="verdictText"></div>
     </div>
-    <div class="source">Fuente: NASA POWER (precipitación, temperatura, humedad)</div>
+    <div class="source">Fuente: NASA POWER (precipitación, temperatura, humedad) comparado con la climatología de <span class="clim-years">10</span> años</div>
   </div>
 
   <div class="panel" id="statsPanel" style="display:none;">
-    <div class="panel-title">04 — Últimos 14 días vs. mismo período, año anterior</div>
+    <div class="panel-title">05 — Últimos <span class="win-days">14</span> días vs. climatología (promedio de <span class="clim-years">10</span> años)</div>
     <div class="grid" id="statsGrid"></div>
-    <div class="source">Fuente: NASA POWER API (datos diarios point)</div>
+    <div class="source">Fuente: NASA POWER API (datos diarios, AG community). Promedio histórico: mismo período calendario en los años elegidos. Heladas: T mín ≤ 2 °C. Calor extremo: T máx ≥ 35 °C</div>
   </div>
 
   <div class="panel" id="cropPanel" style="display:none;">
-    <div class="panel-title">05 — Recomendación para tu cultivo</div>
+    <div class="panel-title">06 — Recomendación para tu cultivo</div>
     <div class="semaforo">
       <div class="dot" id="cropDot">--</div>
       <div class="verdict-text" id="cropVerdictText"></div>
@@ -100,21 +161,63 @@
     <div class="source">Fuente: FAO + rangos agronómicos de referencia (no reemplaza asesoramiento profesional)</div>
   </div>
 
+  <div class="panel" id="strategyPanel" style="display:none;">
+    <div class="panel-title">07 — Comparación de estrategias de rotación</div>
+    <div class="strategy-note" id="strategyNote"></div>
+    <div class="strategy-grid" id="strategyGrid"></div>
+    <div class="source">Puntaje 0–100 = clima actual + rotación + demanda de agua + suelo + erosión, ponderado según tu prioridad. Es una guía para explorar opciones, no reemplaza el criterio del agricultor ni de un agrónomo local.</div>
+  </div>
+
+  <div class="panel" id="annualPanel" style="display:none;">
+    <div class="panel-title">08 — Calendario climático anual (promedio de <span class="clim-years">10</span> años)</div>
+    <div class="chart-wrap"><svg id="annualChart" width="800" height="270" viewBox="0 0 800 270"></svg></div>
+    <div class="annual-legend">
+      <span><i style="background:#4aa3df"></i>Lluvia mensual (mm)</span>
+      <span><i style="background:#e8b34d"></i>Temperatura media (°C)</span>
+      <span><i style="background:#5fd48a;opacity:.4"></i>Rango de temperatura del cultivo</span>
+      <span><i class="dotleg" style="background:#5fd48a"></i>Favorable</span>
+      <span><i class="dotleg" style="background:#e8b34d"></i>Poca lluvia</span>
+      <span><i class="dotleg" style="background:#e2624f"></i>Temperatura fuera de rango</span>
+    </div>
+    <div class="verdict-text annual-note" id="annualNote"></div>
+    <div class="source">Fuente: NASA POWER API (PRECTOTCORR, T2M, T2M_MIN), promedio de años completos</div>
+  </div>
+
   <div class="panel" id="chartPanel" style="display:none;">
-    <div class="panel-title">06 — Precipitación diaria (mm) — últimos 14 días</div>
+    <div class="panel-title">09 — Precipitación diaria (mm) — últimos <span class="win-days">14</span> días</div>
     <div class="chart-wrap"><svg id="chart" width="800" height="220" viewBox="0 0 800 220"></svg></div>
     <div class="source">Fuente: NASA POWER API (PRECTOTCORR)</div>
   </div>
 
+  <div class="panel" id="gapsPanel" style="display:none;">
+    <div class="panel-title">10 — Qué no sabemos y dónde se necesita criterio local</div>
+    <ul class="gaps-list" id="gapsList"></ul>
+  </div>
+
+  <details class="panel glossary">
+    <summary>Glosario: términos científicos</summary>
+    <dl>
+      <dt>Evapotranspiración</dt><dd>Agua que pasa del suelo y de las plantas a la atmósfera. A mayor calor y viento, mayor demanda de agua del cultivo.</dd>
+      <dt>Humedad de suelo (zona de raíces)</dt><dd>Proporción de agua disponible en el suelo donde llegan las raíces (0–100%). NASA POWER la modela; SMAP la mide por satélite en la capa superficial.</dd>
+      <dt>Anomalía</dt><dd>Diferencia entre lo observado y lo normal para esa época. Una anomalía de −40% en lluvia significa que llovió 40% menos que el promedio.</dd>
+      <dt>Percentil</dt><dd>Posición del valor actual entre los años anteriores. Percentil 10 = solo 1 de cada 10 años tuvo menos lluvia.</dd>
+      <dt>NDVI</dt><dd>Índice de vegetación (de −1 a 1) calculado con imágenes satelitales: valores altos indican vegetación densa y vigorosa.</dd>
+      <dt>Riesgo de helada</dt><dd>Temperaturas mínimas del aire de 2 °C o menos, que pueden dañar cultivos sensibles.</dd>
+      <dt>Balance hídrico</dt><dd>Comparación entre el agua que entra (lluvia, riego) y la que sale (evapotranspiración, drenaje).</dd>
+      <dt>Observación satelital vs. medición terrestre</dt><dd>El satélite cubre grandes áreas con regularidad pero con menor detalle; la medición en el campo es precisa en un punto. Combinarlas mejora la confianza.</dd>
+    </dl>
+  </details>
+
   <p class="hint">
-    Fuente de datos principal: <code>power.larc.nasa.gov/api</code> (NASA POWER, acceso público, sin API key). Se piden precipitación (PRECTOTCORR), temperatura a 2m (T2M), humedad relativa (RH2M) y humedad de suelo modelada (GWETROOT, GWETTOP) diarias. Para humedad de suelo satelital de mayor precisión (SMAP), la vía de producción es AppEEARS con cuenta de NASA Earthdata Login — requiere backend por su flujo asincrónico. La recomendación de cultivo es un motor de reglas simplificado con rangos agronómicos aproximados: no reemplaza el consejo de un ingeniero agrónomo local.
+    Fuente de datos principal: <code>power.larc.nasa.gov/api</code> (NASA POWER, acceso público, sin API key). Se piden precipitación (PRECTOTCORR), temperatura a 2m (T2M, T2M_MIN, T2M_MAX), humedad relativa (RH2M) y humedad de suelo modelada (GWETROOT, GWETTOP) diarias, de los años que elijas para el promedio (3 a 30), para calcular la climatología y las anomalías. Para humedad de suelo satelital de mayor precisión (SMAP), la vía de producción es AppEEARS con cuenta de NASA Earthdata Login — requiere backend por su flujo asincrónico. La recomendación de cultivo es un motor de reglas simplificado con rangos agronómicos aproximados: no reemplaza el consejo de un ingeniero agrónomo local.
   </p>
 
   <footer>AGROVISTA · PROTOTIPO NO OFICIAL · DATOS EN VIVO DE NASA POWER</footer>
+  <p class="ai-note">Uso de herramientas de IA: este proyecto se desarrolló con asistencia de Claude (Anthropic, modelo de lenguaje) para generar y revisar código (JavaScript, HTML, CSS) y textos de la interfaz. Las reglas agronómicas fueron redactadas con esa asistencia y deben validarse con expertos locales. Los datos provienen de NASA POWER y NASA GIBS; no se generó con IA ningún dato climático.</p>
 </div>
-<!-- Comentario de prueba -->
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="script.js"></script>
+<script src="analisis.js"></script>
 </body>
 </html>
