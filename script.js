@@ -95,8 +95,23 @@ function updateCropCycle(){
   document.getElementById('cropDuration').value = info.duration;
   document.getElementById('endDate').value = info.end;
 }
+function todayISO(){
+  const t = new Date();
+  return `${t.getFullYear()}-${pad2(t.getMonth() + 1)}-${pad2(t.getDate())}`;
+}
+
+const startDateInput = document.getElementById('startDate');
+startDateInput.min = todayISO();
+// Si se escribe o pega una fecha anterior a hoy, se descarta.
+startDateInput.addEventListener('change', () => {
+  startDateInput.min = todayISO();
+  if(startDateInput.value && startDateInput.value < startDateInput.min){
+    startDateInput.value = '';
+    updateCropCycle();
+  }
+});
 document.getElementById('crop').addEventListener('change', updateCropCycle);
-document.getElementById('startDate').addEventListener('input', updateCropCycle);
+startDateInput.addEventListener('input', updateCropCycle);
 
 const FAMILY_LABEL = {
   graminea: 'gramínea', leguminosa: 'leguminosa', asteracea: 'asterácea',
