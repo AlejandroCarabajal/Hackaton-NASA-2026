@@ -370,6 +370,33 @@ function updateCoords(lat, lng){
   lonInput.value = lng.toFixed(4);
   document.getElementById('terrenoPanel').style.display = 'none';
   detectCountry(lat, lng);
+  updateBaseImageDate(lat, lng);
+}
+
+// Fecha de captura de la imagen base (Esri World Imagery) en el punto elegido.
+let baseDateReq = 0;
+async function updateBaseImageDate(lat, lng){
+  const el = document.getElementById('baseImageNote');
+  if(!el) return;
+  const req = ++baseDateReq;
+  el.textContent = 'Imagen base (Esri World Imagery): consultando fecha de captura…';
+  try {
+    const url = 'https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/0/query'
+      + `?geometry=${lng},${lat}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects`
+      + '&outFields=SRC_DATE2,NICE_NAME&returnGeometry=false&f=json';
+    const data = await (await fetch(url)).json();
+    if(req !== baseDateReq) return;
+    const a = data.features && data.features[0] && data.features[0].attributes;
+    if(a && a.SRC_DATE2){
+      const d = new Date(a.SRC_DATE2);
+      const txt = `${pad2(d.getUTCDate())}/${pad2(d.getUTCMonth() + 1)}/${d.getUTCFullYear()}`;
+      el.textContent = `Imagen base (Esri World Imagery) · Captura del ${txt}${a.NICE_NAME ? ' · ' + a.NICE_NAME : ''}.`;
+    } else {
+      el.textContent = 'Imagen base (Esri World Imagery): fecha de captura no disponible en este punto.';
+    }
+  } catch(err){
+    if(req === baseDateReq) el.textContent = 'Imagen base (Esri World Imagery): no se pudo consultar la fecha de captura.';
+  }
 }
 
 [latInput, lonInput].forEach(el => el.addEventListener('input', () => {
