@@ -581,14 +581,25 @@ function setGibsLayer(key){
     map.getPane('gibsPane').style.zIndex = 250;
   }
   const url = `https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/${cfg.id}/default/default/GoogleMapsCompatible_Level${cfg.level}/{z}/{y}/{x}.png`;
-  let errors = 0;
+  let errors = 0, dateText = 'de la última fecha disponible';
+  const baseNote = () => cfg.label + ' · NASA GIBS · Imagen ' + dateText + '.';
   gibsLayer = L.tileLayer(url, { pane: 'gibsPane', maxNativeZoom: cfg.level, maxZoom: 18, opacity: 0.75, attribution: 'NASA GIBS' });
   gibsLayer.on('tileerror', () => {
     errors++;
-    if(errors === 6) note.textContent = cfg.label + ' · NASA GIBS (última fecha disponible). Algunas teselas no cargaron: la capa puede no tener datos en esta zona o fecha.';
+    if(errors === 6) note.textContent = baseNote() + ' Algunas teselas no cargaron: la capa puede no tener datos en esta zona o fecha.';
   });
+  const layerRef = gibsLayer;
   gibsLayer.addTo(map);
-  note.textContent = cfg.label + ' · NASA GIBS (última fecha disponible).';
+  note.textContent = baseNote();
+
+  // GIBS informa la fecha real de la imagen en el encabezado "Layer-Time-Actual".
+  const probe = `https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/${cfg.id}/default/default/GoogleMapsCompatible_Level${cfg.level}/2/1/1.png`;
+  fetch(probe).then(r => {
+    const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(r.headers.get('Layer-Time-Actual') || '');
+    if(!m || gibsLayer !== layerRef) return;
+    dateText = `del ${m[3]}/${m[2]}/${m[1]}`;
+    note.textContent = baseNote();
+  }).catch(() => {});
 }
 
 document.addEventListener('DOMContentLoaded', () => {
