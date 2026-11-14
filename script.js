@@ -769,6 +769,8 @@ runBtn.addEventListener('click', async () => {
     }
 
     setAnalysis(analysis, cropKey, prevCropKey);
+    document.dispatchEvent(new Event('agrovista:analisis-listo'));
+
     statusEl.textContent = `Listo — datos reales de NASA POWER para (${lat.toFixed(3)}, ${lon.toFixed(3)}).`;
   } catch (err) {
     statusEl.textContent = 'Error al consultar NASA POWER: ' + err.message + ' (revisá tu conexión o probá otra ubicación)';
