@@ -280,13 +280,13 @@ let map, marker, currentCountryCode = null;
 function initMap(){
   map = L.map('map', { zoomControl: true }).setView([-15, -60], 4);
   L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-    attribution: 'NASA GIBS / Esri',
+    attribution: 'Esri World Imagery',
     maxZoom: 18
   }).addTo(map);
 
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png', {
-    attribution: 'CartoDB',
-    maxZoom: 19,
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+    attribution: 'Esri',
+    maxZoom: 18,
     pane: 'overlayPane'
   }).addTo(map);
 
@@ -452,7 +452,7 @@ function evaluateCrop(cropKey, prevCropKey, avgSoilMoisture, avgTemp){
     const prevFam = FAMILY_LABEL[prev.family] || prev.family;
     const cropFam = FAMILY_LABEL[crop.family] || crop.family;
 
-    const GOOD_AFTER_LEGUME = ['maiz','trigo','cebada','girasol','sorgo','caña','tomate','papa','cebolla','ajo','pimiento','zanahoria','sandia','melon','calabaza','tabaco','cafe','aguacate','naranja','manzana'];
+    const GOOD_AFTER_LEGUME = ['maiz','trigo','cebada','girasol','sorgo','cana','tomate','papa','cebolla','ajo','pimiento','zanahoria','sandia','melon','calabaza','tabaco','cafe','aguacate','naranja','manzana'];
     const BAD_SAME_FAMILY = 'Misma familia: aumenta el riesgo de plagas y enfermedades compartidas, y compiten por los mismos nutrientes.';
     const LEGUME_BENEFIT = 'Las leguminosas fijan nitrógeno en el suelo mediante bacterias simbióticas, dejando la parcela en mejores condiciones para el cultivo siguiente.';
 
@@ -491,7 +491,7 @@ function evaluateCrop(cropKey, prevCropKey, avgSoilMoisture, avgTemp){
 
 async function fetchPower(lat, lon, startDate, endDate){
   const params = new URLSearchParams({
-    parameters: 'PRECTOTCORR,T2M,RH2M,GWETROOT,GWETTOP',
+    parameters: 'PRECTOTCORR,T2M,T2M_MIN,T2M_MAX,RH2M,GWETROOT,GWETTOP',
     community: 'AG',
     longitude: lon,
     latitude: lat,
@@ -573,88 +573,25 @@ runBtn.addEventListener('click', async () => {
 
   runBtn.disabled = true;
   statusEl.textContent = 'Consultando NASA POWER…';
-  document.getElementById('resultPanel').style.display = 'none';
-  document.getElementById('statsPanel').style.display = 'none';
-  document.getElementById('cropPanel').style.display = 'none';
-  document.getElementById('chartPanel').style.display = 'none';
+  ['resultPanel','statsPanel','cropPanel','strategyPanel','annualPanel','chartPanel','gapsPanel']
+    .forEach(id => { document.getElementById(id).style.display = 'none'; });
 
   try {
+    const { years, days } = getAverageSettings();
     const today = new Date();
     const end = new Date(today); end.setDate(end.getDate() - 3);
-    const recentStart = new Date(end); recentStart.setDate(recentStart.getDate() - 13);
+    const histStart = new Date(end.getFullYear() - years, 0, 1);
 
-    const histEnd = new Date(end); histEnd.setFullYear(histEnd.getFullYear() - 1);
-    const histStart = new Date(histEnd); histStart.setDate(histStart.getDate() - 13);
+    statusEl.textContent = `Consultando últimos ${days} días y climatología de ${years} años…`;
+    const data = await fetchPower(lat, lon, fmtDate(histStart), fmtDate(end));
 
-    statusEl.textContent = 'Consultando últimos 14 días…';
-    const recent = await fetchPower(lat, lon, fmtDate(recentStart), fmtDate(end));
-
-    statusEl.textContent = 'Consultando mismo período, año anterior…';
-    const hist = await fetchPower(lat, lon, fmtDate(histStart), fmtDate(histEnd));
-
-    const rP = recent.properties.parameter;
-    const hP = hist.properties.parameter;
-
-    const recentRainTotal = sum(rP.PRECTOTCORR);
-    const histRainTotal = sum(hP.PRECTOTCORR);
-    const recentTemp = average(rP.T2M);
-    const recentHum = average(rP.RH2M);
-    const recentSoilRoot = average(rP.GWETROOT);
-    const recentSoilTop = average(rP.GWETTOP);
-
-    const rainDiffPct = histRainTotal > 0
-      ? Math.round(((recentRainTotal - histRainTotal) / histRainTotal) * 100)
-      : null;
-
-    let dotColor, dotLabel, verdict;
-    if(rainDiffPct !== null && rainDiffPct <= -40){
-      dotColor = 'var(--red)'; dotLabel = 'SECO';
-      verdict = `Tu zona recibió <b>${Math.abs(rainDiffPct)}% menos lluvia</b> que el mismo período del año pasado. Con temperatura promedio de ${recentTemp.toFixed(1)}°C, conviene revisar el riego esta semana.`;
-    } else if(rainDiffPct !== null && rainDiffPct <= -15){
-      dotColor = 'var(--amber)'; dotLabel = 'ATENCIÓN';
-      verdict = `La lluvia acumulada está <b>${Math.abs(rainDiffPct)}% por debajo</b> del promedio del año pasado para estas fechas. Vale la pena monitorear los próximos días.`;
-    } else {
-      dotColor = 'var(--leaf)'; dotLabel = 'OK';
-      verdict = rainDiffPct === null
-        ? `No hay suficiente histórico de lluvia para comparar, pero la temperatura promedio (${recentTemp.toFixed(1)}°C) está dentro de rango normal.`
-        : `La lluvia acumulada está en línea (o por encima) del promedio del año pasado (${rainDiffPct >= 0 ? '+' : ''}${rainDiffPct}%). Sin señales de estrés hídrico por ahora.`;
+    cacheRaw(data, end, years);
+    const analysis = analyzeRaw(lastRaw, years, days);
+    if(!analysis){
+      throw new Error('NASA POWER no devolvió datos válidos para este punto (¿océano o fuera de cobertura?)');
     }
 
-    document.getElementById('dot').style.background = dotColor;
-    document.getElementById('dot').style.color = '#0c1712';
-    document.getElementById('dot').textContent = dotLabel;
-    document.getElementById('verdictText').innerHTML = verdict;
-    document.getElementById('resultPanel').style.display = 'block';
-
-    const grid = document.getElementById('statsGrid');
-    grid.innerHTML = `
-      <div class="stat"><div class="label">Lluvia acumulada (14d)</div><div class="value">${recentRainTotal.toFixed(1)}<span class="unit"> mm</span></div></div>
-      <div class="stat"><div class="label">Lluvia año anterior</div><div class="value">${histRainTotal.toFixed(1)}<span class="unit"> mm</span></div></div>
-      <div class="stat"><div class="label">Variación</div><div class="value" style="color:${rainDiffPct!==null && rainDiffPct<0 ? 'var(--red)' : 'var(--leaf)'}">${rainDiffPct === null ? 's/d' : (rainDiffPct>=0?'+':'')+rainDiffPct+'%'}</div></div>
-      <div class="stat"><div class="label">Temp. promedio</div><div class="value">${recentTemp.toFixed(1)}<span class="unit">°C</span></div></div>
-      <div class="stat"><div class="label">Humedad relativa</div><div class="value">${recentHum.toFixed(0)}<span class="unit">%</span></div></div>
-      <div class="stat"><div class="label">Humedad suelo (raíces)</div><div class="value">${recentSoilRoot!==null ? (recentSoilRoot*100).toFixed(0) : 's/d'}<span class="unit">%</span></div></div>
-      <div class="stat"><div class="label">Humedad suelo (superficie)</div><div class="value">${recentSoilTop!==null ? (recentSoilTop*100).toFixed(0) : 's/d'}<span class="unit">%</span></div></div>
-    `;
-    document.getElementById('statsPanel').style.display = 'block';
-
-    if(recentSoilRoot !== null){
-      const cropResult = evaluateCrop(cropKey, prevCropKey, recentSoilRoot, recentTemp);
-      if(cropResult){
-        document.getElementById('cropDot').style.background = cropResult.dotColor;
-        document.getElementById('cropDot').style.color = '#0c1712';
-        document.getElementById('cropDot').textContent = cropResult.dotLabel;
-        document.getElementById('cropVerdictText').innerHTML = cropResult.verdict;
-        document.getElementById('cropChecklist').innerHTML = cropResult.checklist
-          .map(c => `<div class="verdict-text" style="margin-bottom:6px;">• ${c}</div>`).join('');
-        document.getElementById('rotationNote').innerHTML = cropResult.rotationHtml;
-        document.getElementById('cropPanel').style.display = 'block';
-      }
-    }
-
-    drawChart(rP.PRECTOTCORR);
-    document.getElementById('chartPanel').style.display = 'block';
-
+    setAnalysis(analysis, cropKey, prevCropKey);
     statusEl.textContent = `Listo — datos reales de NASA POWER para (${lat.toFixed(3)}, ${lon.toFixed(3)}).`;
   } catch (err) {
     statusEl.textContent = 'Error al consultar NASA POWER: ' + err.message + ' (revisá tu conexión o probá otra ubicación)';

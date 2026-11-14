@@ -366,3 +366,204 @@ footer {
 .leaflet-popup-close-button {
   color: var(--text-dim) !important;
 }
+
+/* ===== Capas NASA GIBS ===== */
+.layer-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.layer-note {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 8px;
+  min-height: 14px;
+}
+
+/* ===== Escenario ===== */
+input[type="range"] {
+  width: 100%;
+  padding: 0;
+  accent-color: var(--leaf);
+  background: transparent;
+  border: 0;
+}
+.btn-ghost {
+  background: transparent;
+  color: var(--text-dim);
+  border: 1px solid var(--line);
+}
+.scenario-flag {
+  margin-top: 10px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--amber);
+}
+
+/* ===== Comparación de estrategias ===== */
+.strategy-note {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-bottom: 12px;
+}
+.strategy-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 14px;
+}
+.strat {
+  background: #0d1a14;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 16px;
+}
+.strat-main {
+  border-color: var(--leaf-dim);
+  box-shadow: 0 0 0 1px var(--leaf-dim) inset;
+}
+.strat-head {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 10px;
+  align-items: end;
+}
+.strat-tag {
+  grid-column: 1 / -1;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.strat-crop {
+  font-size: 20px;
+  font-weight: 700;
+}
+.strat-score {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--leaf);
+}
+.strat-score small {
+  font-size: 11px;
+  color: var(--text-dim);
+  font-weight: 400;
+}
+.bars {
+  margin: 12px 0 4px;
+  display: grid;
+  gap: 5px;
+}
+.bar {
+  display: grid;
+  grid-template-columns: 62px 1fr;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-dim);
+}
+.bar-track {
+  height: 6px;
+  background: var(--line);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.bar-track i {
+  display: block;
+  height: 100%;
+  background: var(--leaf);
+}
+.strat h4 {
+  margin: 14px 0 4px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--leaf);
+}
+.strat ul {
+  margin: 0;
+  padding-left: 16px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text);
+}
+.strat li {
+  margin-bottom: 3px;
+}
+
+/* ===== Calendario anual ===== */
+.annual-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-dim);
+  margin: 8px 0 12px;
+}
+.annual-legend i {
+  display: inline-block;
+  width: 14px;
+  height: 8px;
+  border-radius: 2px;
+  margin-right: 5px;
+  vertical-align: middle;
+}
+.annual-legend i.dotleg {
+  width: 8px;
+  border-radius: 50%;
+}
+.annual-note {
+  max-width: none;
+  font-size: 14px;
+}
+
+/* ===== Límites y glosario ===== */
+.gaps-list {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text);
+}
+.gaps-list li {
+  margin-bottom: 6px;
+}
+.glossary summary {
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.glossary dl {
+  margin: 14px 0 0;
+}
+.glossary dt {
+  font-weight: 700;
+  color: var(--leaf);
+  margin-top: 10px;
+  font-size: 13px;
+}
+.glossary dd {
+  margin: 2px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+/* ===== Declaración de uso de IA ===== */
+.ai-note {
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--text-dim);
+  text-align: center;
+  max-width: 70ch;
+  margin: 8px auto 0;
+}
