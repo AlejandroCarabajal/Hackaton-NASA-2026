@@ -102,23 +102,13 @@
     <div class="row" style="margin-top:14px;">
       <div class="field">
         <label for="climYears">Años del promedio histórico</label>
-        <select id="climYears">
-          <option value="3">3 años</option>
-          <option value="5">5 años</option>
-          <option value="10" selected>10 años</option>
-          <option value="15">15 años</option>
-          <option value="20">20 años</option>
-          <option value="30">30 años</option>
-        </select>
+        <input id="climYears" type="number" min="1" max="30" step="1" value="10" inputmode="numeric" aria-describedby="climYearsHelp" />
+        <small id="climYearsHelp">Ingresá entre 1 y 30 años.</small>
       </div>
       <div class="field">
         <label for="windowDays">Período reciente a comparar</label>
-        <select id="windowDays">
-          <option value="7">Últimos 7 días</option>
-          <option value="14" selected>Últimos 14 días</option>
-          <option value="21">Últimos 21 días</option>
-          <option value="30">Últimos 30 días</option>
-        </select>
+        <input id="windowDays" type="number" min="1" max="12" step="1" value="1" inputmode="numeric" aria-describedby="windowMonthsHelp" />
+        <small id="windowMonthsHelp">Ingresá entre 1 y 12 meses.</small>
       </div>
     </div>
     <div class="row" style="margin-top:14px;">
@@ -132,7 +122,7 @@
       </div>
       <button id="resetScenario" type="button" class="btn-ghost">Restablecer</button>
     </div>
-    <div class="source">Las prioridades reordenan la comparación de estrategias. Más años dan un promedio más estable; menos años reflejan mejor el clima reciente. Al cambiar el período se recalcula al instante (si pedís más años de los ya consultados, se vuelve a consultar NASA POWER). Los deslizadores aplican un ajuste simple sobre las condiciones actuales (no es un pronóstico). Se actualizan sin volver a consultar NASA POWER.</div>
+    <div class="source">Las prioridades reordenan la comparación de estrategias. Más años dan un promedio más estable; menos años reflejan mejor el clima reciente. Al cambiar los años o meses se recalcula el análisis; cuando hacen falta datos adicionales, se consulta nuevamente NASA POWER. Los deslizadores aplican un ajuste simple sobre las condiciones actuales (no es un pronóstico). Se actualizan sin volver a consultar NASA POWER.</div>
   </div>
 
   <div class="panel" id="resultPanel" style="display:none;">
@@ -145,7 +135,7 @@
   </div>
 
   <div class="panel" id="statsPanel" style="display:none;">
-    <div class="panel-title">05 — Últimos <span class="win-days">14</span> días vs. climatología (promedio de <span class="clim-years">10</span> años)</div>
+    <div class="panel-title">05 — Últimos <span class="win-months">1</span> mes(es) vs. climatología (promedio de <span class="clim-years">10</span> años)</div>
     <div class="grid" id="statsGrid"></div>
     <div class="source">Fuente: NASA POWER API (datos diarios, AG community). Promedio histórico: mismo período calendario en los años elegidos. Heladas: T mín ≤ 2 °C. Calor extremo: T máx ≥ 35 °C</div>
   </div>
@@ -158,29 +148,7 @@
     </div>
     <div id="cropChecklist" style="margin-top:16px;"></div>
     <div id="rotationNote" style="margin-top:14px;"></div>
-    <div class="source">Fuente: FAO + rangos agronómicos de referencia. Temperaturas de siembra, germinación y cardinales de maíz, soja, alfalfa y sorgo: INTA y bibliografía agrometeorológica, según los cuadros del equipo (no reemplaza asesoramiento profesional)</div>
-  </div>
-
-  <div class="panel" id="strategyPanel" style="display:none;">
-    <div class="panel-title">07 — Comparación de estrategias de rotación</div>
-    <div class="strategy-note" id="strategyNote"></div>
-    <div class="strategy-grid" id="strategyGrid"></div>
-    <div class="source">Puntaje 0–100 = clima actual + rotación + demanda de agua + suelo + erosión, ponderado según tu prioridad. Es una guía para explorar opciones, no reemplaza el criterio del agricultor ni de un agrónomo local.</div>
-  </div>
-
-  <div class="panel" id="annualPanel" style="display:none;">
-    <div class="panel-title">08 — Calendario climático anual (promedio de <span class="clim-years">10</span> años)</div>
-    <div class="chart-wrap"><svg id="annualChart" width="800" height="270" viewBox="0 0 800 270"></svg></div>
-    <div class="annual-legend">
-      <span><i style="background:#4aa3df"></i>Lluvia mensual (mm)</span>
-      <span><i style="background:#e8b34d"></i>Temperatura media (°C)</span>
-      <span><i style="background:#5fd48a;opacity:.4"></i>Rango de temperatura del cultivo</span>
-      <span><i class="dotleg" style="background:#5fd48a"></i>Favorable</span>
-      <span><i class="dotleg" style="background:#e8b34d"></i>Poca lluvia</span>
-      <span><i class="dotleg" style="background:#e2624f"></i>Temperatura fuera de rango</span>
-    </div>
-    <div class="verdict-text annual-note" id="annualNote"></div>
-    <div class="source">Fuente: NASA POWER API (PRECTOTCORR, T2M, T2M_MIN), promedio de años completos</div>
+    <div class="source">Fuente: FAO + rangos agronómicos de referencia (no reemplaza asesoramiento profesional)</div>
   </div>
 
   <div class="panel" id="strategyPanel" style="display:none;">
@@ -206,7 +174,7 @@
   </div>
 
   <div class="panel" id="chartPanel" style="display:none;">
-    <div class="panel-title">09 — Precipitación diaria (mm) — últimos <span class="win-days">14</span> días</div>
+    <div class="panel-title">09 — Precipitación diaria (mm) — últimos <span class="win-months">1</span> mes(es)</div>
     <div class="chart-wrap"><svg id="chart" width="800" height="220" viewBox="0 0 800 220"></svg></div>
     <div class="source">Fuente: NASA POWER API (PRECTOTCORR)</div>
   </div>
@@ -215,6 +183,33 @@
     <div class="panel-title">10 — Qué no sabemos y dónde se necesita criterio local</div>
     <ul class="gaps-list" id="gapsList"></ul>
   </div>
+
+
+  <section class="panel terreno-panel" id="terrenoPanel">
+    <div class="panel-title">11 — Datos del terreno · ingreso manual</div>
+    <p>Completá los datos que conocés de tu parcela. Los campos son opcionales; las mediciones de laboratorio ofrecen resultados más confiables.</p>
+    <form id="terrenoForm">
+      <div class="terreno-grid">
+        <div class="field"><label for="terrenoNombre">Nombre de la parcela</label><input id="terrenoNombre" maxlength="80" placeholder="Ej.: Lote norte"></div>
+        <div class="field"><label for="terrenoSuperficie">Superficie (hectáreas)</label><input id="terrenoSuperficie" type="number" min="0" step="any" placeholder="Ej.: 5"></div>
+        <div class="field"><label for="terrenoTextura">Textura del suelo</label><select id="terrenoTextura"><option value="">No informado</option><option value="arenoso">Arenoso</option><option value="franco">Franco</option><option value="arcilloso">Arcilloso</option><option value="limoso">Limoso</option></select></div>
+        <div class="field"><label for="terrenoPh">pH medido del suelo (0–14)</label><input id="terrenoPh" type="number" min="0" max="14" step="0.1" placeholder="Ej.: 6.5"></div>
+        <div class="field"><label for="terrenoN">Nitrógeno (mg/kg)</label><input id="terrenoN" type="number" min="0" step="any" placeholder="Análisis de suelo"></div>
+        <div class="field"><label for="terrenoP">Fósforo (mg/kg)</label><input id="terrenoP" type="number" min="0" step="any" placeholder="Análisis de suelo"></div>
+        <div class="field"><label for="terrenoK">Potasio (mg/kg)</label><input id="terrenoK" type="number" min="0" step="any" placeholder="Análisis de suelo"></div>
+        <div class="field"><label for="terrenoRiego">Sistema de riego</label><select id="terrenoRiego"><option value="">No informado</option><option value="sin">Sin riego</option><option value="goteo">Goteo</option><option value="aspersion">Aspersión</option><option value="surcos">Surcos</option><option value="otro">Otro</option></select></div>
+        <div class="field"><label for="terrenoLamina">Agua aplicada por riego (mm por evento)</label><input id="terrenoLamina" type="number" min="0" step="any" placeholder="Ej.: 20"></div>
+        <div class="field"><label for="terrenoFrecuencia">Intervalo entre riegos (días)</label><input id="terrenoFrecuencia" type="number" min="1" step="1" placeholder="Ej.: 3"></div>
+        <div class="field"><label for="terrenoRendimiento">Rendimiento esperado (toneladas/ha)</label><input id="terrenoRendimiento" type="number" min="0" step="any" placeholder="Ej.: 7.5"></div>
+        <div class="field"><label for="terrenoPlagas">Plagas o enfermedades observadas</label><input id="terrenoPlagas" maxlength="180" placeholder="Ej.: roya; o dejar vacío"></div>
+        <div class="field terreno-ancho"><label for="terrenoNotas">Observaciones sobre fertilización, erosión y manejo</label><textarea id="terrenoNotas" rows="3" maxlength="1000" placeholder="Anotá las características que consideres importantes"></textarea></div>
+      </div>
+      <div class="terreno-actions"><button type="submit">Calcular análisis personalizado</button><button id="terrenoGuardar" type="button" class="btn-ghost">Guardar en este navegador</button><button id="terrenoLimpiar" type="button" class="btn-ghost">Limpiar</button><button id="terrenoPdf" type="button" class="btn-ghost" disabled>Descargar análisis en PDF</button><button id="terrenoWhatsapp" type="button" class="btn-ghost" disabled>Compartir por WhatsApp</button></div>
+    </form>
+    <p id="terrenoMensaje" class="source" role="status" aria-live="polite"></p>
+    <div id="terrenoResultados" class="terreno-resultados" hidden aria-live="polite"></div>
+    <div class="source">Las estimaciones son orientativas: el pH se describe de forma general, no por cultivo; los nutrientes se registran sin diagnosticarlos porque sus rangos dependen del método de laboratorio y el cultivo. La producción estimada no es una predicción. Los datos se guardan únicamente en este navegador cuando elegís guardar.</div>
+  </section>
 
   <details class="panel glossary">
     <summary>Glosario: términos científicos</summary>
@@ -241,5 +236,7 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="script.js"></script>
 <script src="analisis.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
+<script src="terreno.js"></script>
 </body>
 </html>
