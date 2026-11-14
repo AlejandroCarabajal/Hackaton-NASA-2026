@@ -478,7 +478,7 @@ function setAnalysis(A, cropKey, prevKey){
 /* ---------- período del promedio configurable ---------- */
 let lastRaw = null;   // { data, end, start }: respuesta de NASA POWER en memoria
 
-const CLIM_HELP = 'Años: de 0 a 30 · Meses: de 0 a 12. Con 0 años, indicá al menos 1 mes.';
+const CLIM_HELP = 'Ejemplo: 5 año/s y 6 mes/es = el histórico de los últimos 5 años y 6 meses. Año/s: de 0 a 30 · Mes/es: de 0 a 11; con 0 años, indicá al menos 1 mes.';
 
 function spanLabel(years, months){
   const y = years ? `${years} ${years === 1 ? 'año' : 'años'}` : '';
@@ -497,15 +497,16 @@ function getAverageSettings(){
   const helpEl = document.getElementById('climHelp');
   const parse = el => { const v = el.value.trim(); return v === '' ? 0 : (/^\d+$/.test(v) ? Number(v) : NaN); };
   const years = parse(yearEl), months = parse(monthEl);
-  const badY = !(years >= 0 && years <= 30), badM = !(months >= 0 && months <= 12);
+  const badY = !(years >= 0 && years <= 30), badM = !(months >= 0 && months <= 11);
   const none = !badY && !badM && years === 0 && months === 0;
   let msg = '';
   if(badY) msg = 'Los años del promedio histórico deben ser un número entre 0 y 30.';
-  else if(badM) msg = 'Los meses del promedio histórico deben ser un número entre 0 y 12.';
+  else if(badM) msg = 'Los meses del promedio histórico deben ser un número entre 0 y 11.';
   else if(none) msg = 'Con 0 años tenés que indicar al menos 1 mes de promedio histórico.';
   yearEl.classList.toggle('invalid', badY);
   monthEl.classList.toggle('invalid', badM || none);
-  helpEl.textContent = msg || CLIM_HELP;
+  // Leyenda: qué histórico se va a usar con los valores cargados, más un ejemplo
+  helpEl.textContent = msg || `Se usa el histórico de ${lastSpanLabel(years, months)}. ${CLIM_HELP}`;
   helpEl.classList.toggle('error', !!msg);
   if(msg) throw new Error(msg);
   const days = parseInt(document.getElementById('windowDays').value, 10) || 14;
