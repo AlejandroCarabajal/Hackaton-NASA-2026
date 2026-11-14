@@ -135,6 +135,7 @@
   }
   async function buildPdf() {
     if (!report) { message.textContent = 'Primero calculá el análisis personalizado.'; return null; }
+    if (typeof lastAnalysis === 'undefined' || !lastAnalysis) { message.textContent = 'Primero completá los datos de la parcela y presioná «Analizar parcela».'; return null; }
     if (!window.jspdf?.jsPDF) { message.textContent = 'No se pudo cargar jsPDF. Revisá tu conexión a Internet.';
       console.error('La biblioteca jsPDF no está disponible.');
       return null;

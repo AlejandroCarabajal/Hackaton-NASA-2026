@@ -467,6 +467,7 @@ function renderAll(){
   drawChart(A.recent.series);
   document.getElementById('chartPanel').style.display = 'block';
   renderGaps(A);
+  document.getElementById('terrenoPanel').style.display = 'block';
 }
 
 function setAnalysis(A, cropKey, prevKey){

@@ -314,8 +314,13 @@ function setMarker(lat, lng){
 function updateCoords(lat, lng){
   latInput.value = lat.toFixed(4);
   lonInput.value = lng.toFixed(4);
+  document.getElementById('terrenoPanel').style.display = 'none';
   detectCountry(lat, lng);
 }
+
+[latInput, lonInput].forEach(el => el.addEventListener('input', () => {
+  document.getElementById('terrenoPanel').style.display = 'none';
+}));
 
 async function detectCountry(lat, lng){
   try {
@@ -743,7 +748,7 @@ runBtn.addEventListener('click', async () => {
 
   runBtn.disabled = true;
   statusEl.textContent = 'Consultando NASA POWER…';
-  ['resultPanel','statsPanel','cropPanel','strategyPanel','annualPanel','chartPanel','gapsPanel']
+  ['resultPanel','statsPanel','cropPanel','strategyPanel','annualPanel','chartPanel','gapsPanel','terrenoPanel']
     .forEach(id => { document.getElementById(id).style.display = 'none'; });
 
   try {
