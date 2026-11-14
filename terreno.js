@@ -132,6 +132,38 @@ document.addEventListener('agrovista:analisis-listo', actualizarBotones);
       { title: 'QUÉ NO SABEMOS Y DÓNDE SE NECESITA CRITERIO LOCAL', rows: gaps }
     ] };
   }
+  function gestionAgricola() {
+    let d;
+    try { d = JSON.parse(localStorage.getItem('agrovista_gestion_v1')); } catch (e) { return []; }
+    if (!d || !Array.isArray(d.maquinas) || !Array.isArray(d.servicios) || !Array.isArray(d.gastos)) return [];
+    if (!d.maquinas.length && !d.servicios.length && !d.gastos.length) return [];
+    const money = n => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(Number(n) || 0);
+    const fecha = f => String(f || '').split('-').reverse().join('/') || 's/f';
+    const lista = (arr, fn) => {
+      const rows = arr.slice(0, 40).map(fn);
+      if (arr.length > 40) rows.push('... y ' + (arr.length - 40) + ' más');
+      return rows.length ? rows : ['Sin registros'];
+    };
+    const nombreMaq = id => (d.maquinas.find(m => m.id === id) || {}).nombre || 'Máquina eliminada';
+    const totalG = d.gastos.reduce((a, g) => a + (Number(g.importe) || 0), 0);
+    const totalS = d.servicios.reduce((a, s) => a + (Number(s.costo) || 0), 0);
+    return [
+      { title: 'GESTIÓN AGRÍCOLA - RESUMEN', rows: [
+        'Máquinas registradas: ' + d.maquinas.length,
+        'Mantenimientos pendientes: ' + d.servicios.filter(s => s.estado === 'Pendiente').length,
+        'Servicios registrados: ' + d.servicios.length,
+        'Gastos generales: ' + money(totalG),
+        'Costos de mantenimiento: ' + money(totalS),
+        'Total de costos registrados: ' + money(totalG + totalS)
+      ] },
+      { title: 'GESTIÓN AGRÍCOLA - MAQUINARIA', rows: lista(d.maquinas, m =>
+        [m.nombre, m.tipo, [m.marca, m.modelo].filter(Boolean).join(' / '), m.anio, m.estado].filter(Boolean).join(' - ') + (m.notas ? ' (' + m.notas + ')' : '')) },
+      { title: 'GESTIÓN AGRÍCOLA - MANTENIMIENTOS', rows: lista(d.servicios, s =>
+        nombreMaq(s.maquina) + ' - ' + s.tipo + ' - ' + fecha(s.fecha) + ' - ' + s.estado + ' - ' + money(s.costo) + (s.detalle ? ' (' + s.detalle + ')' : '')) },
+      { title: 'GESTIÓN AGRÍCOLA - GASTOS', rows: lista(d.gastos, g =>
+        fecha(g.fecha) + ' - ' + g.categoria + ' - ' + (g.parcela || 'sin parcela') + ' - ' + money(g.importe) + (g.detalle ? ' (' + g.detalle + ')' : '')) }
+    ];
+  }
   async function satelliteImage() {
     try {
       const lat = parseFloat(document.getElementById('lat').value), lon = parseFloat(document.getElementById('lon').value);
@@ -226,6 +258,7 @@ if (camposManuales.length) {
 }
 
 app.analisis.forEach(block);
+gestionAgricola().forEach(block);
 
 if (report && informe.lines.length) {
   line('RESULTADOS DEL ANÁLISIS MANUAL', {
