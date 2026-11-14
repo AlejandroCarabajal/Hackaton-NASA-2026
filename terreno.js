@@ -47,7 +47,7 @@ document.addEventListener('agrovista:analisis-listo', actualizarBotones);
     }
     if (value('terrenoTextura')) items.push(`Textura declarada: <strong>${escapeHtml(value('terrenoTextura'))}</strong>. La retención y el drenaje del agua dependen también de la estructura y materia orgánica.`);
     const nutrients = [['terrenoN','N'],['terrenoP','P'],['terrenoK','K']].filter(([id]) => number(id) !== null);
-    if (nutrients.length) items.push(`Nutrientes registrados: ${nutrients.map(([id,label]) => `${label}: ${fmt(number(id))} mg/kg`).join('; ')}. Sin método analítico y cultivo no se determina suficiencia ni dosis de fertilización.`);
+    if (nutrients.length) items.push(`Nutrientes registrados: ${nutrients.map(([id,label]) => `${label}: ${fmt(number(id))} ppm`).join('; ')}. Sin método analítico y cultivo no se determina suficiencia ni dosis de fertilización.`);
     if (mm !== null && days !== null) {
       const perDay = mm / days;
       items.push(`Riego declarado: <strong>${fmt(perDay)} mm/día</strong> en promedio (${fmt(mm)} mm cada ${fmt(days)} días). Equivale a ${fmt(perDay * 7)} mm en 7 días, suponiendo aplicación uniforme. No incluye lluvia ni pérdidas.`);
@@ -79,8 +79,8 @@ document.addEventListener('agrovista:analisis-listo', actualizarBotones);
   form.addEventListener('change', invalidateReport);
   const labels = {
     terrenoNombre:'Parcela', terrenoSuperficie:'Superficie (ha)', terrenoTextura:'Textura del suelo',
-    terrenoPh:'pH del suelo', terrenoN:'Nitrógeno (mg/kg)', terrenoP:'Fósforo (mg/kg)',
-    terrenoK:'Potasio (mg/kg)', terrenoRiego:'Sistema de riego', terrenoLamina:'Lámina de riego (mm/evento)',
+    terrenoPh:'pH del suelo', terrenoN:'Nitrógeno (ppm)', terrenoP:'Fósforo (ppm)',
+    terrenoK:'Potasio (ppm)', terrenoRiego:'Sistema de riego', terrenoLamina:'Lámina de riego (mm/evento)',
     terrenoFrecuencia:'Intervalo entre riegos (días)', terrenoRendimiento:'Rendimiento esperado (t/ha)',
     terrenoPlagas:'Plagas y enfermedades', terrenoNotas:'Observaciones'
   };
