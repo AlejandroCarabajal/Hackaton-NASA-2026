@@ -59,6 +59,45 @@ const CROP_DB = {
   remolacha:{ label: 'Remolacha',      family: 'amaranthaceae', gwetRange: [0.40, 0.70], tempRange: [10, 22] },
 };
 
+// Duración típica del ciclo (días, de siembra a cosecha). Cultivos perennes: sin fecha de fin.
+const CROP_CYCLE_DAYS = {
+  maiz:140, arroz:130, trigo:180, cebada:150, avena:150, sorgo:120, mijo:90, cana:365,
+  soja:130, girasol:120, mani:130, algodon:180, frijol:90, poroto:90, lenteja:110, garbanzo:120,
+  papa:120, yuca:300, camote:130, tomate:120, pimiento:130, cebolla:150, ajo:180, zanahoria:100,
+  lechuga:60, sandia:90, melon:90, calabaza:100, tabaco:120, pina:540, yute:120, colza:210, remolacha:180,
+};
+
+function pad2(n){ return String(n).padStart(2, '0'); }
+
+function cropCycleInfo(){
+  const key = document.getElementById('crop').value;
+  const days = CROP_CYCLE_DAYS[key];
+  const start = document.getElementById('startDate').value;
+  let duration = '—', end = '—';
+  if(key && CROP_DB[key]){
+    if(days){
+      duration = `${days} días (~${Math.round(days / 30)} meses)`;
+      const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(start);
+      if(m){
+        const d = new Date(+m[1], +m[2] - 1, +m[3] + days);
+        end = `${pad2(d.getDate())}/${pad2(d.getMonth() + 1)}/${d.getFullYear()}`;
+      }
+    } else {
+      duration = 'Cultivo perenne (sin ciclo anual)';
+      end = 'No aplica';
+    }
+  }
+  return { duration, end, start: start ? start.split('-').reverse().join('/') : '' };
+}
+
+function updateCropCycle(){
+  const info = cropCycleInfo();
+  document.getElementById('cropDuration').value = info.duration;
+  document.getElementById('endDate').value = info.end;
+}
+document.getElementById('crop').addEventListener('change', updateCropCycle);
+document.getElementById('startDate').addEventListener('input', updateCropCycle);
+
 const FAMILY_LABEL = {
   graminea: 'gramínea', leguminosa: 'leguminosa', asteracea: 'asterácea',
   solanacea: 'solanácea', malvaceae: 'malvácea', alliaceae: 'aliácea',
@@ -374,6 +413,7 @@ function loadCropsForCountry(countryCode){
     opt.textContent = CROP_DB[key].label;
     prevCropSelect.appendChild(opt);
   });
+  updateCropCycle();
 }
 
 async function searchLocation(){

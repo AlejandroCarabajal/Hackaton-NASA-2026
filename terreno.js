@@ -85,7 +85,11 @@
         ...(A && A.elev !== null ? ['Elevación (grilla NASA POWER): ' + Math.round(A.elev) + ' m'] : [])
       ] },
       { title: 'CULTIVO Y CONFIGURACIÓN DEL ANÁLISIS', rows: [
-        'Cultivo a sembrar: ' + sel('crop'), 'Cultivo anterior: ' + sel('prevCrop'), 'Prioridad: ' + sel('priority'),
+        'Cultivo a sembrar: ' + sel('crop'),
+        'Duración del cultivo: ' + val('cropDuration'),
+        'Fecha de inicio: ' + (val('startDate').split('-').reverse().join('/') || 'no indicada'),
+        'Fecha de finalización: ' + (val('startDate') ? val('endDate') : 'no calculada (falta fecha de inicio)'),
+        'Cultivo anterior: ' + sel('prevCrop'), 'Prioridad: ' + sel('priority'),
         'Promedio histórico: ' + val('climYears') + ' año(s) y ' + val('climMonths') + ' mes(es)',
         'Período reciente: ' + sel('windowDays'),
         'Escenario: lluvia ' + val('rainAdj') + '%, temperatura ' + val('tempAdj') + ' °C',
