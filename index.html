@@ -158,7 +158,29 @@
     </div>
     <div id="cropChecklist" style="margin-top:16px;"></div>
     <div id="rotationNote" style="margin-top:14px;"></div>
-    <div class="source">Fuente: FAO + rangos agronómicos de referencia (no reemplaza asesoramiento profesional)</div>
+    <div class="source">Fuente: FAO + rangos agronómicos de referencia. Temperaturas de siembra, germinación y cardinales de maíz, soja, alfalfa y sorgo: INTA y bibliografía agrometeorológica, según los cuadros del equipo (no reemplaza asesoramiento profesional)</div>
+  </div>
+
+  <div class="panel" id="strategyPanel" style="display:none;">
+    <div class="panel-title">07 — Comparación de estrategias de rotación</div>
+    <div class="strategy-note" id="strategyNote"></div>
+    <div class="strategy-grid" id="strategyGrid"></div>
+    <div class="source">Puntaje 0–100 = clima actual + rotación + demanda de agua + suelo + erosión, ponderado según tu prioridad. Es una guía para explorar opciones, no reemplaza el criterio del agricultor ni de un agrónomo local.</div>
+  </div>
+
+  <div class="panel" id="annualPanel" style="display:none;">
+    <div class="panel-title">08 — Calendario climático anual (promedio de <span class="clim-years">10</span> años)</div>
+    <div class="chart-wrap"><svg id="annualChart" width="800" height="270" viewBox="0 0 800 270"></svg></div>
+    <div class="annual-legend">
+      <span><i style="background:#4aa3df"></i>Lluvia mensual (mm)</span>
+      <span><i style="background:#e8b34d"></i>Temperatura media (°C)</span>
+      <span><i style="background:#5fd48a;opacity:.4"></i>Rango de temperatura del cultivo</span>
+      <span><i class="dotleg" style="background:#5fd48a"></i>Favorable</span>
+      <span><i class="dotleg" style="background:#e8b34d"></i>Poca lluvia</span>
+      <span><i class="dotleg" style="background:#e2624f"></i>Temperatura fuera de rango</span>
+    </div>
+    <div class="verdict-text annual-note" id="annualNote"></div>
+    <div class="source">Fuente: NASA POWER API (PRECTOTCORR, T2M, T2M_MIN), promedio de años completos</div>
   </div>
 
   <div class="panel" id="strategyPanel" style="display:none;">

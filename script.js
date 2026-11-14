@@ -9,15 +9,15 @@ const cropSelect = document.getElementById('crop');
 const prevCropSelect = document.getElementById('prevCrop');
 
 const CROP_DB = {
-  maiz:     { label: 'Maíz',            family: 'graminea',      gwetRange: [0.40, 0.70], tempRange: [18, 27] },
+  maiz:     { label: 'Maíz',            family: 'graminea',      gwetRange: [0.40, 0.70], tempRange: [16, 32] }, // maíz, soja, alfalfa y sorgo: [siembra mín., óptimo máx.] (ver CROP_AG en analisis.js)
   arroz:    { label: 'Arroz',           family: 'graminea',      gwetRange: [0.70, 1.00], tempRange: [22, 32] },
   trigo:    { label: 'Trigo',           family: 'graminea',      gwetRange: [0.30, 0.60], tempRange: [12, 24] },
   cebada:   { label: 'Cebada',          family: 'graminea',      gwetRange: [0.25, 0.50], tempRange: [10, 20] },
   avena:    { label: 'Avena',           family: 'graminea',      gwetRange: [0.30, 0.55], tempRange: [10, 20] },
-  sorgo:    { label: 'Sorgo',           family: 'graminea',      gwetRange: [0.30, 0.55], tempRange: [20, 30] },
+  sorgo:    { label: 'Sorgo',           family: 'graminea',      gwetRange: [0.30, 0.55], tempRange: [18, 32] },
   mijo:     { label: 'Mijo',            family: 'graminea',      gwetRange: [0.30, 0.50], tempRange: [25, 35] },
   cana:     { label: 'Caña de azúcar',  family: 'graminea',      gwetRange: [0.60, 0.85], tempRange: [22, 32] },
-  soja:     { label: 'Soja',            family: 'leguminosa',    gwetRange: [0.40, 0.70], tempRange: [20, 30] },
+  soja:     { label: 'Soja',            family: 'leguminosa',    gwetRange: [0.40, 0.70], tempRange: [15, 30] },
   girasol:  { label: 'Girasol',         family: 'asteracea',     gwetRange: [0.25, 0.55], tempRange: [18, 27] },
   mani:     { label: 'Maní',            family: 'leguminosa',    gwetRange: [0.35, 0.65], tempRange: [22, 30] },
   algodon:  { label: 'Algodón',         family: 'malvaceae',     gwetRange: [0.40, 0.65], tempRange: [25, 35] },
@@ -27,7 +27,7 @@ const CROP_DB = {
   poroto:   { label: 'Poroto',          family: 'leguminosa',    gwetRange: [0.40, 0.65], tempRange: [18, 25] },
   lenteja:  { label: 'Lenteja',         family: 'leguminosa',    gwetRange: [0.30, 0.50], tempRange: [15, 22] },
   garbanzo: { label: 'Garbanzo',        family: 'leguminosa',    gwetRange: [0.30, 0.50], tempRange: [15, 25] },
-  alfalfa:  { label: 'Alfalfa',         family: 'leguminosa',    gwetRange: [0.35, 0.65], tempRange: [15, 25] },
+  alfalfa:  { label: 'Alfalfa',         family: 'leguminosa',    gwetRange: [0.35, 0.65], tempRange: [15, 30] },
   papa:     { label: 'Papa',            family: 'solanacea',     gwetRange: [0.50, 0.75], tempRange: [15, 20] },
   yuca:     { label: 'Yuca / Mandioca', family: 'euphorbiaceae', gwetRange: [0.40, 0.70], tempRange: [22, 29] },
   camote:   { label: 'Camote',          family: 'convolvulaceae',gwetRange: [0.40, 0.65], tempRange: [20, 30] },
