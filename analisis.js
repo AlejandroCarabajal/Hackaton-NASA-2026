@@ -406,7 +406,7 @@ function renderWater(A){
     text = `No hay suficiente historia de lluvia para comparar. Temperatura media reciente: ${tempTxt} °C.`;
   }
   const dot = document.getElementById('dot');
-  dot.style.background = color; dot.style.color = '#0c1712'; dot.textContent = label;
+  dot.style.background = color; dot.style.color = 'var(--sobre-acento, #0c1712)'; dot.textContent = label;
   document.getElementById('verdictText').innerHTML = text;
   document.getElementById('resultPanel').style.display = 'block';
 }
@@ -441,7 +441,7 @@ function renderCrop(A, adj, sc){
   const scenarioTxt = (sc.rainAdj !== 0 || sc.tempAdj !== 0)
     ? `<div class="scenario-flag">Escenario aplicado: lluvia ${sc.rainAdj >= 0 ? '+' : ''}${sc.rainAdj}%, temperatura ${sc.tempAdj >= 0 ? '+' : ''}${sc.tempAdj} °C (ajuste simple, no es un pronóstico).</div>` : '';
   if(adj.root === null){
-    dot.style.background = 'var(--amber)'; dot.style.color = '#0c1712'; dot.textContent = 'S/D';
+    dot.style.background = 'var(--amber)'; dot.style.color = 'var(--sobre-acento, #0c1712)'; dot.textContent = 'S/D';
     document.getElementById('cropVerdictText').innerHTML = 'NASA POWER no devolvió humedad de suelo para este punto, por lo que no se puede evaluar la siembra.';
     document.getElementById('cropChecklist').innerHTML = '';
     document.getElementById('rotationNote').innerHTML = '';
@@ -461,7 +461,7 @@ function renderCrop(A, adj, sc){
       }
       items = items.concat(agc.evidence, agc.risks.map(t => '⚠ ' + t));
     }
-    dot.style.background = dotColor; dot.style.color = '#0c1712'; dot.textContent = dotLabel;
+    dot.style.background = dotColor; dot.style.color = 'var(--sobre-acento, #0c1712)'; dot.textContent = dotLabel;
     document.getElementById('cropVerdictText').innerHTML = verdict;
     document.getElementById('cropChecklist').innerHTML = items.map(c => `<div class="verdict-text" style="margin-bottom:6px;">• ${c}</div>`).join('') + scenarioTxt;
     document.getElementById('rotationNote').innerHTML = r.rotationHtml;
@@ -491,15 +491,15 @@ function renderAnnual(A){
   const yR = r => padT + plotH * (1 - r / maxR);
   const colW = (w - padL - padR) / 12;
 
-  mk('rect', { x: padL, y: yT(crop.tempRange[1]), width: w - padL - padR, height: Math.max(2, yT(crop.tempRange[0]) - yT(crop.tempRange[1])), fill: '#5fd48a', opacity: 0.12 });
-  mk('line', { x1: padL, x2: w - padR, y1: padT + plotH, y2: padT + plotH, stroke: '#24392e' });
+  mk('rect', { x: padL, y: yT(crop.tempRange[1]), width: w - padL - padR, height: Math.max(2, yT(crop.tempRange[0]) - yT(crop.tempRange[1])), fill: cssVar('--leaf', '#5fd48a'), opacity: 0.12 });
+  mk('line', { x1: padL, x2: w - padR, y1: padT + plotH, y2: padT + plotH, stroke: cssVar('--line', '#24392e') });
 
   const okMonths = [], vulMonths = [], frostMonths = [];
   M.forEach((x, i) => {
     const cx = padL + colW * i + colW / 2;
     if(x.rain !== null){
       const bh = plotH * (x.rain / maxR);
-      mk('rect', { x: cx - colW * 0.28, y: padT + plotH - bh, width: colW * 0.56, height: Math.max(bh, 1), fill: '#4aa3df', opacity: 0.55, rx: 2 });
+      mk('rect', { x: cx - colW * 0.28, y: padT + plotH - bh, width: colW * 0.56, height: Math.max(bh, 1), fill: cssVar('--lluvia', '#4aa3df'), opacity: 0.55, rx: 2 });
     }
     mk('text', { x: cx, y: h - 24, 'font-size': 10, 'text-anchor': 'middle' }, MESES[i]);
 
@@ -510,13 +510,13 @@ function renderAnnual(A){
       if(tOk && rOk){ status = 'ok'; okMonths.push(MESES[i]); }
       else { status = (!tOk) ? 'red' : 'amber'; vulMonths.push(MESES[i]); }
     }
-    const col = status === 'ok' ? '#5fd48a' : status === 'red' ? '#e2624f' : status === 'amber' ? '#e8b34d' : '#24392e';
+    const col = status === 'ok' ? cssVar('--leaf', '#5fd48a') : status === 'red' ? cssVar('--red', '#e2624f') : status === 'amber' ? cssVar('--amber', '#e8b34d') : cssVar('--line', '#24392e');
     mk('circle', { cx, cy: h - 10, r: 4, fill: col });
     if(x.frostProb !== null && x.frostProb >= 0.3) frostMonths.push(MESES[i]);
   });
 
   const pts = M.map((x, i) => x.temp === null ? null : `${(padL + colW * i + colW / 2).toFixed(1)},${yT(x.temp).toFixed(1)}`).filter(Boolean).join(' ');
-  mk('polyline', { points: pts, fill: 'none', stroke: '#e8b34d', 'stroke-width': 2 });
+  mk('polyline', { points: pts, fill: 'none', stroke: cssVar('--amber', '#e8b34d'), 'stroke-width': 2 });
 
   mk('text', { x: 4, y: padT + 8, 'font-size': 9 }, 'mm');
   mk('text', { x: w - 4, y: padT + 8, 'font-size': 9, 'text-anchor': 'end' }, '°C');

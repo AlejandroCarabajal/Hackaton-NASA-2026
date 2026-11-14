@@ -817,6 +817,11 @@ function chartWidth(){
   const inner = wrap ? wrap.clientWidth - PANEL_INNER_OFFSET : 800;
   return Math.max(600, Math.round(inner));
 }
+// Color de una variable CSS del tema actual (los gráficos SVG se dibujan con estos colores)
+function cssVar(name, fallback){
+  const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  return v || fallback;
+}
 function sizeChart(svg, w, h){
   svg.setAttribute('width', w);
   svg.setAttribute('height', h);
@@ -843,7 +848,7 @@ function drawChart(precipObj){
     rect.setAttribute('width', Math.max(barW - 6, 2));
     rect.setAttribute('height', Math.max(bh, 1));
     rect.setAttribute('rx', 2);
-    rect.setAttribute('fill', val > 0 ? '#5fd48a' : '#24392e');
+    rect.setAttribute('fill', val > 0 ? cssVar('--leaf', '#5fd48a') : cssVar('--line', '#24392e'));
     svg.appendChild(rect);
 
     if(i % 2 === 0){
@@ -860,7 +865,7 @@ function drawChart(precipObj){
   const axis = document.createElementNS(ns, 'line');
   axis.setAttribute('x1', padL); axis.setAttribute('x2', w-4);
   axis.setAttribute('y1', h-padB); axis.setAttribute('y2', h-padB);
-  axis.setAttribute('stroke', '#24392e');
+  axis.setAttribute('stroke', cssVar('--line', '#24392e'));
   svg.appendChild(axis);
 }
 

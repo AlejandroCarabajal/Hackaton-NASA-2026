@@ -1,0 +1,164 @@
+/* =====================================================================
+   Temas de contraste para Gestión Agrícola
+   El modo oscuro es el diseño original (gestion-agricola.css): no se toca.
+   Este archivo solo cambia colores cuando se elige Claro o Alto contraste
+   con el selector (tema.js guarda la elección y la comparte con index.html).
+   Va en @media screen para no alterar la versión impresa del informe.
+   ===================================================================== */
+
+/* El selector va dentro de la cabecera, junto a "Volver" */
+.cabecera .tema-selector {
+  position: static;
+  margin-left: auto;
+}
+
+@media screen {
+
+  /* ---------- Modo claro ---------- */
+  html[data-tema="claro"] {
+    color: #13221a;
+    background: #eef3ec;
+    color-scheme: light;
+  }
+  html[data-tema="claro"] body {
+    background: radial-gradient(circle at top right, #dcefe2 0, transparent 40%), #eef3ec;
+  }
+  html[data-tema="claro"] .cabecera {
+    background: #ffffff;
+    border-bottom-color: #c3d2c7;
+  }
+  html[data-tema="claro"] .marca { color: #1e7d45; }
+  html[data-tema="claro"] p { color: #46594d; }
+  html[data-tema="claro"] .volver { color: #1e7d45; border-color: #9fbfa9; }
+  html[data-tema="claro"] .volver:hover { background: #e3f1e7; }
+  html[data-tema="claro"] .indicador,
+  html[data-tema="claro"] .panel {
+    background: #ffffff;
+    border-color: #c3d2c7;
+  }
+  html[data-tema="claro"] .indicador span { color: #46594d; }
+  html[data-tema="claro"] .pestana,
+  html[data-tema="claro"] button,
+  html[data-tema="claro"] .boton-archivo {
+    background: #f1f6f2;
+    border-color: #b5c7ba;
+    color: #13221a;
+  }
+  html[data-tema="claro"] .secundario { background: #e6efe8; }
+  html[data-tema="claro"] .pestana.activa,
+  html[data-tema="claro"] .primario {
+    background: #1e7d45;
+    border-color: #1e7d45;
+    color: #ffffff;
+  }
+  html[data-tema="claro"] label { color: #46594d; }
+  html[data-tema="claro"] input,
+  html[data-tema="claro"] select,
+  html[data-tema="claro"] textarea {
+    background: #ffffff;
+    border-color: #b5c7ba;
+    color: #13221a;
+  }
+  html[data-tema="claro"] th,
+  html[data-tema="claro"] td { border-bottom-color: #d3dfd6; }
+  html[data-tema="claro"] th { color: #46594d; }
+  html[data-tema="claro"] .peligro {
+    background: #fbe9e7;
+    border-color: #e0a59e;
+    color: #9c2b1f;
+  }
+  html[data-tema="claro"] .vacio { color: #5d7064; }
+  html[data-tema="claro"] .estado { background: #d9eedf; color: #13221a; }
+  html[data-tema="claro"] .estado.pendiente { background: #fbecc8; color: #6b4a00; }
+  html[data-tema="claro"] .vista-informe {
+    background: #f6f9f4;
+    border-color: #c3d2c7;
+  }
+  html[data-tema="claro"] #mensaje { color: #1e7d45; }
+
+  /* ---------- Alto contraste ---------- */
+  html[data-tema="alto"] {
+    color: #ffffff;
+    background: #000000;
+    color-scheme: dark;
+  }
+  html[data-tema="alto"] body { background: #000000; }
+  html[data-tema="alto"] .cabecera {
+    background: #000000;
+    border-bottom: 2px solid #ffffff;
+  }
+  html[data-tema="alto"] .marca { color: #3dff8a; }
+  html[data-tema="alto"] p,
+  html[data-tema="alto"] label,
+  html[data-tema="alto"] th,
+  html[data-tema="alto"] .indicador span,
+  html[data-tema="alto"] .vacio { color: #ffffff; }
+  html[data-tema="alto"] .volver {
+    color: #ffffff;
+    border: 2px solid #ffffff;
+    text-decoration: underline;
+  }
+  html[data-tema="alto"] .volver:hover { background: #222222; }
+  html[data-tema="alto"] .indicador,
+  html[data-tema="alto"] .panel,
+  html[data-tema="alto"] .vista-informe {
+    background: #000000;
+    border: 2px solid #ffffff;
+  }
+  html[data-tema="alto"] .pestana,
+  html[data-tema="alto"] button,
+  html[data-tema="alto"] .boton-archivo,
+  html[data-tema="alto"] .secundario {
+    background: #000000;
+    border: 2px solid #ffffff;
+    color: #ffffff;
+  }
+  html[data-tema="alto"] .pestana.activa,
+  html[data-tema="alto"] .primario {
+    background: #3dff8a;
+    border-color: #3dff8a;
+    color: #000000;
+  }
+  html[data-tema="alto"] input,
+  html[data-tema="alto"] select,
+  html[data-tema="alto"] textarea {
+    background: #000000;
+    border: 2px solid #ffffff;
+    color: #ffffff;
+  }
+  html[data-tema="alto"] th,
+  html[data-tema="alto"] td { border-bottom-color: #ffffff; }
+  html[data-tema="alto"] .peligro {
+    background: #000000;
+    border-color: #ff6b6b;
+    color: #ff6b6b;
+  }
+  html[data-tema="alto"] .estado {
+    background: #000000;
+    border: 1px solid #3dff8a;
+    color: #3dff8a;
+  }
+  html[data-tema="alto"] .estado.pendiente {
+    border-color: #ffd400;
+    color: #ffd400;
+  }
+  html[data-tema="alto"] #mensaje { color: #3dff8a; }
+  html[data-tema="alto"] :focus-visible {
+    outline: 3px solid #ffd400 !important;
+    outline-offset: 2px;
+  }
+}
+
+/* Los botones del selector conservan su propio estilo (tema.css) en cualquier modo */
+html[data-tema] .tema-selector button {
+  background: transparent;
+  border: none;
+  color: #eaf2ec;
+}
+html[data-tema] .tema-selector button:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+html[data-tema] .tema-selector button[aria-pressed="true"] {
+  background: #eaf2ec;
+  color: #0c1712;
+}

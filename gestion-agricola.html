@@ -4,10 +4,13 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AgroNasa | Gestión Agrícola</title>
 <link rel="stylesheet" href="gestion-agricola.css">
+<link rel="stylesheet" href="tema.css">
+<link rel="stylesheet" href="gestion-agricola-tema.css">
+<script src="tema.js"></script>
 <script src="gestion-agricola.js" defer></script>
 </head>
 <body>
-<header class="cabecera"><div><span class="marca">✦ AGRONASA</span><h1>Gestión Agrícola</h1><p>Control de maquinaria, mantenimiento y costos del campo</p></div><a class="volver" href="index.html">← Volver al análisis de parcelas</a></header>
+<header class="cabecera"><div><span class="marca">✦ AGRONASA</span><h1>Gestión Agrícola</h1><p>Control de maquinaria, mantenimiento y costos del campo</p></div><div class="tema-selector" role="group" aria-label="Contraste de la pantalla"><button type="button" data-tema-opcion="oscuro" aria-pressed="true">Oscuro</button><button type="button" data-tema-opcion="claro" aria-pressed="false">Claro</button><button type="button" data-tema-opcion="alto" aria-pressed="false">Alto contraste</button></div><a class="volver" href="index.html">← Volver al análisis de parcelas</a></header>
 <main class="contenedor">
 <section class="indicadores" aria-label="Resumen administrativo">
 <div class="indicador"><span>Maquinaria registrada</span><strong id="totalMaquinas">0</strong></div><div class="indicador"><span>Mantenimientos pendientes</span><strong id="totalPendientes">0</strong></div><div class="indicador"><span>Gastos registrados</span><strong id="totalGastos">$ 0</strong></div><div class="indicador"><span>Servicios registrados</span><strong id="totalServicios">0</strong></div>

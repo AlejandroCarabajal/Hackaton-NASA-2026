@@ -18,7 +18,7 @@
 }
 body {
   margin: 0;
-  background: radial-gradient(ellipse at top, #0f1612 0%, var(--bg) 60%);
+  background: radial-gradient(ellipse at top, var(--bg-brillo, #0f1612) 0%, var(--bg) 60%);
   color: var(--text);
   font-family: var(--sans);
   padding: 28px 18px 60px;
@@ -133,7 +133,7 @@ label {
 }
 select,
 input {
-  background: #0d1a14;
+  background: var(--campo, #0d1a14);
   border: 1px solid var(--line);
   color: var(--text);
   padding: 10px 12px;
@@ -146,7 +146,7 @@ input:focus {
   outline: 1px solid var(--leaf);
 }
 input[type="date"] {
-  color-scheme: dark;
+  color-scheme: var(--esquema, dark);
 }
 input[type="date"]::-webkit-calendar-picker-indicator {
   cursor: pointer;
@@ -155,7 +155,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
 button {
   background: var(--leaf);
-  color: #0c1712;
+  color: var(--sobre-acento, #0c1712);
   border: none;
   font-weight: 700;
   padding: 11px 20px;
@@ -221,7 +221,7 @@ button:disabled {
   gap: 12px;
 }
 .stat {
-  background: #0d1a14;
+  background: var(--campo, #0d1a14);
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 14px 16px;
@@ -259,7 +259,7 @@ svg text {
   line-height: 1.6;
 }
 .hint code {
-  background: #0d1a14;
+  background: var(--campo, #0d1a14);
   padding: 1px 6px;
   border-radius: 4px;
   font-family: var(--mono);
@@ -290,7 +290,7 @@ footer {
 }
 .search-bar input {
   flex: 1;
-  background: #0d1a14;
+  background: var(--campo, #0d1a14);
   border: 1px solid var(--line);
   color: var(--text);
   padding: 10px 12px;
@@ -410,7 +410,7 @@ footer {
   font-family: var(--mono);
   font-size: 12px;
   color: var(--leaf);
-  background: #0d1a14;
+  background: var(--campo, #0d1a14);
   border: 1px solid var(--line);
   padding: 6px 12px;
   border-radius: 6px;
@@ -490,7 +490,7 @@ input[type="range"] {
   gap: 14px;
 }
 .strat {
-  background: #0d1a14;
+  background: var(--campo, #0d1a14);
   border: 1px solid var(--line);
   border-radius: 10px;
   padding: 16px;
@@ -659,8 +659,8 @@ input[type="range"] {
 /* MODULO 11 - DATOS DEL TERRENO */
 
 .terreno-panel {
-  background: linear-gradient(180deg, #12211a, #17281f);
-  border: 1px solid #294238;
+  background: linear-gradient(180deg, var(--panel), var(--panel-2));
+  border: 1px solid var(--borde-campo, #294238);
   border-radius: 12px;
   padding: 22px;
 }
@@ -685,7 +685,7 @@ input[type="range"] {
 }
 
 .terreno-grid label {
-  color: #a5c5b8;
+  color: var(--texto-etiqueta, #a5c5b8);
   font-size: 12px;
 }
 
@@ -694,9 +694,9 @@ input[type="range"] {
 .terreno-grid textarea {
   width: 100%;
   box-sizing: border-box;
-  background: #0b1b14;
-  color: white;
-  border: 1px solid #294238;
+  background: var(--campo, #0b1b14);
+  color: var(--texto-campo, white);
+  border: 1px solid var(--borde-campo, #294238);
   border-radius: 7px;
   padding: 12px 13px;
   font-size: 14px;
@@ -710,7 +710,7 @@ input[type="range"] {
 
 .terreno-grid input::placeholder,
 .terreno-grid textarea::placeholder {
-  color: #7e9187;
+  color: var(--placeholder, #7e9187);
 }
 
 .terreno-grid .terreno-ancho {
@@ -728,7 +728,7 @@ input[type="range"] {
   gap: 10px;
   margin-top: 20px;
   padding-bottom: 16px;
-  border-bottom: 1px solid #294238;
+  border-bottom: 1px solid var(--borde-campo, #294238);
 }
 
 .terreno-resultados {
@@ -796,7 +796,7 @@ input[type="range"] {
 .source-box summary:hover,
 .source-box[open] summary {
   color: var(--leaf);
-  background: rgba(95, 212, 138, 0.12);
+  background: var(--resalte, rgba(95, 212, 138, 0.12));
 }
 .source-box summary:focus-visible {
   outline: 1px solid var(--leaf);
@@ -805,7 +805,7 @@ input[type="range"] {
 .source-box-body {
   margin-top: 8px;
   padding: 10px 12px;
-  background: #0d1a14;
+  background: var(--campo, #0d1a14);
   border: 1px solid var(--line);
   border-radius: 6px;
   font-family: var(--mono);
@@ -819,13 +819,13 @@ input[type="range"] {
 .gestion-acceso {
   margin-top: 24px;
   padding: 24px;
-  border: 1px solid #315343;
+  border: 1px solid var(--borde-campo, #315343);
   border-radius: 14px;
-  background: linear-gradient(135deg, #14291f, #1c382a);
+  background: var(--fondo-acceso, linear-gradient(135deg, #14291f, #1c382a));
 }
 
 .gestion-acceso h2 {
-  color: #d8f5df;
+  color: var(--titulo-acceso, #d8f5df);
   margin-bottom: 14px;
 }
 
@@ -841,20 +841,20 @@ input[type="range"] {
 }
 
 .gestion-acceso-contenido h3 {
-  color: #e4f5e8;
+  color: var(--titulo-acceso, #e4f5e8);
   margin-bottom: 8px;
 }
 
 .gestion-acceso-contenido p {
-  color: #b3cbbb;
+  color: var(--texto-acceso, #b3cbbb);
   line-height: 1.6;
 }
 
 .gestion-acceso-boton {
   display: inline-block;
   padding: 13px 22px;
-  background: #58c47b;
-  color: #092015;
+  background: var(--boton-acceso, #58c47b);
+  color: var(--sobre-acento, #092015);
   border-radius: 8px;
   font-weight: 700;
   text-decoration: none;
@@ -862,7 +862,7 @@ input[type="range"] {
 }
 
 .gestion-acceso-boton:hover {
-  background: #7ee49d;
+  background: var(--boton-acceso-hover, #7ee49d);
   transform: translateY(-2px);
 }
 

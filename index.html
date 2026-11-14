@@ -7,10 +7,17 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌱</text></svg>">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="tema.css">
+<script src="tema.js"></script>
 </head>
 <body>
   
   <header>
+    <div class="tema-selector" role="group" aria-label="Contraste de la pantalla">
+      <button type="button" data-tema-opcion="oscuro" aria-pressed="true">Oscuro</button>
+      <button type="button" data-tema-opcion="claro" aria-pressed="false">Claro</button>
+      <button type="button" data-tema-opcion="alto" aria-pressed="false">Alto contraste</button>
+    </div>
     <div class="header-inner">
       <img class="logo" src="imagenes/logo_nasa_agri_2.png" alt="Logo AgroVista">
       <div class="eyebrow"><b>NASA Space Apps Challenge · Prototipo</b> </div>
@@ -190,12 +197,12 @@
     <div class="panel-title">08 — Calendario climático anual (promedio de <span class="clim-span">10 años</span>)</div>
     <div class="chart-wrap"><svg id="annualChart" width="800" height="270" viewBox="0 0 800 270"></svg></div>
     <div class="annual-legend">
-      <span><i style="background:#4aa3df"></i>Lluvia mensual (mm)</span>
-      <span><i style="background:#e8b34d"></i>Temperatura media (°C)</span>
-      <span><i style="background:#5fd48a;opacity:.4"></i>Rango de temperatura del cultivo</span>
-      <span><i class="dotleg" style="background:#5fd48a"></i>Favorable</span>
-      <span><i class="dotleg" style="background:#e8b34d"></i>Poca lluvia</span>
-      <span><i class="dotleg" style="background:#e2624f"></i>Temperatura fuera de rango</span>
+      <span><i style="background:var(--lluvia, #4aa3df)"></i>Lluvia mensual (mm)</span>
+      <span><i style="background:var(--amber)"></i>Temperatura media (°C)</span>
+      <span><i style="background:var(--leaf);opacity:.4"></i>Rango de temperatura del cultivo</span>
+      <span><i class="dotleg" style="background:var(--leaf)"></i>Favorable</span>
+      <span><i class="dotleg" style="background:var(--amber)"></i>Poca lluvia</span>
+      <span><i class="dotleg" style="background:var(--red)"></i>Temperatura fuera de rango</span>
     </div>
     <div class="verdict-text annual-note" id="annualNote"></div>
     <details class="source-box"><summary>Fuente</summary><div class="source-box-body">NASA POWER API (PRECTOTCORR, T2M, T2M_MIN), promedio de años completos</div></details>
