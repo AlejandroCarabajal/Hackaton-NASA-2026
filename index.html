@@ -82,9 +82,7 @@
           <option value="ninguno">No sé / barbecho</option>
         </select>
       </div>
-      <button id="run">Analizar parcela</button>
     </div>
-    <div class="status" id="status"></div>
     <div class="source">Fuente: FAO Crop Calendar + base de datos agronómica de referencia</div>
   </div>
 
@@ -127,6 +125,9 @@
     </div>
     <div class="source">Las prioridades reordenan la comparación de estrategias. Más años dan un promedio más estable; menos años reflejan mejor el clima reciente. Al cambiar los años o meses se recalcula el análisis; cuando hacen falta datos adicionales, se consulta nuevamente NASA POWER. Los deslizadores aplican un ajuste simple sobre las condiciones actuales (no es un pronóstico). Se actualizan sin volver a consultar NASA POWER.</div>
   </div>
+
+  <button id="run" style="width:100%;margin:0 0 16px;">Analizar parcela</button>
+  <div class="status" id="status" style="margin-bottom:16px;"></div>
 
   <div class="panel" id="resultPanel" style="display:none;">
     <div class="panel-title">04 — Estado hídrico general</div>
