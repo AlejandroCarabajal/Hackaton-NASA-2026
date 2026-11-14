@@ -158,7 +158,7 @@
     doc.setFont('helvetica', 'normal'); doc.setFontSize(11); doc.setTextColor(40, 47, 48);
     doc.text('Análisis personalizado de parcela', margin + 29, 29);
     y = 40;
-    line('Fecha: ' + report.date.toLocaleString('es-AR'), {after:5});
+    line('Fecha: ' + report.date.toLocaleString('es-AR', { hourCycle: 'h23' }), {after:5});
     const app = collectApp();
     const block = s => { line(s.title, {size:11,bold:true,after:3}); s.rows.forEach(r => line('- ' + r, {after:1.5})); y += 4; };
     app.inicio.forEach(block);
