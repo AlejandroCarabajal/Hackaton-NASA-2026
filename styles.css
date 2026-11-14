@@ -409,7 +409,8 @@ footer {
 
 .source {
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: 12px;
+  line-height: 1.5;
   color: var(--text-dim);
   margin-top: 12px;
   padding-top: 10px;
