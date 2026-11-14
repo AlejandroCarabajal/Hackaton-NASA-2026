@@ -97,6 +97,7 @@ document.addEventListener('agrovista:analisis-listo', actualizarBotones);
     const A = (typeof lastAnalysis !== 'undefined') ? lastAnalysis : null;
     const inicio = [
       { title: 'UBICACIÓN DE LA PARCELA', rows: [
+        'Parcela: ' + (val('terrenoNombre') || 'sin nombre'),
         'Localidad: ' + val('locationName'), 'País: ' + domText($('countryBadge')),
         'Latitud: ' + val('lat'), 'Longitud: ' + val('lon'),
         ...(A && A.elev !== null ? ['Elevación (grilla NASA POWER): ' + Math.round(A.elev) + ' m'] : [])
@@ -189,6 +190,9 @@ const informe = report || {
     doc.text('AgroNasa', margin + 29, 21);
     doc.setFont('helvetica', 'normal'); doc.setFontSize(11); doc.setTextColor(40, 47, 48);
     doc.text('Informe de análisis de parcela', margin + 29, 29);
+    const val2 = id => pdfText(document.getElementById(id) ? document.getElementById(id).value : '');
+    const nombreParcela = val2('terrenoNombre');
+    if (nombreParcela) { doc.setFont('helvetica', 'bold'); doc.text('Parcela: ' + nombreParcela.slice(0, 60), margin + 29, 35.5); doc.setFont('helvetica', 'normal'); }
     y = 40;
     line('Fecha: ' + informe.date.toLocaleString('es-AR', { hourCycle: 'h23' }), {after:5});
     const app = collectApp();
@@ -205,7 +209,7 @@ const informe = report || {
     }
     
 const camposManuales = Object.entries(labels)
-  .filter(([key]) => informe.fields[key]);
+  .filter(([key]) => key !== 'terrenoNombre' && informe.fields[key]);
 
 if (camposManuales.length) {
   line('DATOS DECLARADOS POR EL AGRICULTOR', {
@@ -245,7 +249,10 @@ if (report && informe.lines.length) {
     }
     return doc;
   }
-  function fileName() { return 'AgroNasa_analisis_' + new Date().toISOString().slice(0,10) + '.pdf'; }
+  function fileName() {
+    const n = (document.getElementById('terrenoNombre').value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 30);
+    return 'AgroNasa_analisis_' + (n ? n + '_' : '') + new Date().toISOString().slice(0,10) + '.pdf';
+  }
   pdfButton.addEventListener('click', async () => { message.textContent = 'Generando PDF…'; const doc = await buildPdf(); if (doc) { doc.save(fileName()); message.textContent = 'PDF generado y descargado.'; } });
   
 whatsappButton.addEventListener('click', async () => {
