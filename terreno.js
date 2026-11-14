@@ -97,6 +97,7 @@ document.addEventListener('agrovista:analisis-listo', actualizarBotones);
     const A = (typeof lastAnalysis !== 'undefined') ? lastAnalysis : null;
     const inicio = [
       { title: 'UBICACIÓN DE LA PARCELA', rows: [
+        'Parcela: ' + (val('terrenoNombre') || 'sin nombre'),
         'Localidad: ' + val('locationName'), 'País: ' + domText($('countryBadge')),
         'Latitud: ' + val('lat'), 'Longitud: ' + val('lon'),
         ...(A && A.elev !== null ? ['Elevación (grilla NASA POWER): ' + Math.round(A.elev) + ' m'] : [])
@@ -130,6 +131,38 @@ document.addEventListener('agrovista:analisis-listo', actualizarBotones);
       { title: 'CALENDARIO CLIMÁTICO ANUAL', rows: $('annualNote').innerHTML.split(/<br\s*\/?>/i).map(h => { const t = document.createElement('div'); t.innerHTML = h; return domText(t); }).filter(Boolean) },
       { title: 'QUÉ NO SABEMOS Y DÓNDE SE NECESITA CRITERIO LOCAL', rows: gaps }
     ] };
+  }
+  function gestionAgricola() {
+    let d;
+    try { d = JSON.parse(localStorage.getItem('agrovista_gestion_v1')); } catch (e) { return []; }
+    if (!d || !Array.isArray(d.maquinas) || !Array.isArray(d.servicios) || !Array.isArray(d.gastos)) return [];
+    if (!d.maquinas.length && !d.servicios.length && !d.gastos.length) return [];
+    const money = n => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(Number(n) || 0);
+    const fecha = f => String(f || '').split('-').reverse().join('/') || 's/f';
+    const lista = (arr, fn) => {
+      const rows = arr.slice(0, 40).map(fn);
+      if (arr.length > 40) rows.push('... y ' + (arr.length - 40) + ' más');
+      return rows.length ? rows : ['Sin registros'];
+    };
+    const nombreMaq = id => (d.maquinas.find(m => m.id === id) || {}).nombre || 'Máquina eliminada';
+    const totalG = d.gastos.reduce((a, g) => a + (Number(g.importe) || 0), 0);
+    const totalS = d.servicios.reduce((a, s) => a + (Number(s.costo) || 0), 0);
+    return [
+      { title: 'GESTIÓN AGRÍCOLA - RESUMEN', rows: [
+        'Máquinas registradas: ' + d.maquinas.length,
+        'Mantenimientos pendientes: ' + d.servicios.filter(s => s.estado === 'Pendiente').length,
+        'Servicios registrados: ' + d.servicios.length,
+        'Gastos generales: ' + money(totalG),
+        'Costos de mantenimiento: ' + money(totalS),
+        'Total de costos registrados: ' + money(totalG + totalS)
+      ] },
+      { title: 'GESTIÓN AGRÍCOLA - MAQUINARIA', rows: lista(d.maquinas, m =>
+        [m.nombre, m.tipo, [m.marca, m.modelo].filter(Boolean).join(' / '), m.anio, m.estado].filter(Boolean).join(' - ') + (m.notas ? ' (' + m.notas + ')' : '')) },
+      { title: 'GESTIÓN AGRÍCOLA - MANTENIMIENTOS', rows: lista(d.servicios, s =>
+        nombreMaq(s.maquina) + ' - ' + s.tipo + ' - ' + fecha(s.fecha) + ' - ' + s.estado + ' - ' + money(s.costo) + (s.detalle ? ' (' + s.detalle + ')' : '')) },
+      { title: 'GESTIÓN AGRÍCOLA - GASTOS', rows: lista(d.gastos, g =>
+        fecha(g.fecha) + ' - ' + g.categoria + ' - ' + (g.parcela || 'sin parcela') + ' - ' + money(g.importe) + (g.detalle ? ' (' + g.detalle + ')' : '')) }
+    ];
   }
   async function satelliteImage() {
     try {
@@ -189,6 +222,9 @@ const informe = report || {
     doc.text('AgroNasa', margin + 29, 21);
     doc.setFont('helvetica', 'normal'); doc.setFontSize(11); doc.setTextColor(40, 47, 48);
     doc.text('Informe de análisis de parcela', margin + 29, 29);
+    const val2 = id => pdfText(document.getElementById(id) ? document.getElementById(id).value : '');
+    const nombreParcela = val2('terrenoNombre');
+    if (nombreParcela) { doc.setFont('helvetica', 'bold'); doc.text('Parcela: ' + nombreParcela.slice(0, 60), margin + 29, 35.5); doc.setFont('helvetica', 'normal'); }
     y = 40;
     line('Fecha: ' + informe.date.toLocaleString('es-AR', { hourCycle: 'h23' }), {after:5});
     const app = collectApp();
@@ -205,7 +241,7 @@ const informe = report || {
     }
     
 const camposManuales = Object.entries(labels)
-  .filter(([key]) => informe.fields[key]);
+  .filter(([key]) => key !== 'terrenoNombre' && informe.fields[key]);
 
 if (camposManuales.length) {
   line('DATOS DECLARADOS POR EL AGRICULTOR', {
@@ -222,6 +258,7 @@ if (camposManuales.length) {
 }
 
 app.analisis.forEach(block);
+gestionAgricola().forEach(block);
 
 if (report && informe.lines.length) {
   line('RESULTADOS DEL ANÁLISIS MANUAL', {
@@ -245,7 +282,10 @@ if (report && informe.lines.length) {
     }
     return doc;
   }
-  function fileName() { return 'AgroNasa_analisis_' + new Date().toISOString().slice(0,10) + '.pdf'; }
+  function fileName() {
+    const n = (document.getElementById('terrenoNombre').value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 30);
+    return 'AgroNasa_analisis_' + (n ? n + '_' : '') + new Date().toISOString().slice(0,10) + '.pdf';
+  }
   pdfButton.addEventListener('click', async () => { message.textContent = 'Generando PDF…'; const doc = await buildPdf(); if (doc) { doc.save(fileName()); message.textContent = 'PDF generado y descargado.'; } });
   
 whatsappButton.addEventListener('click', async () => {
