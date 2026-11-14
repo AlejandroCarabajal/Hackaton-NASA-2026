@@ -97,37 +97,40 @@ document.addEventListener('agrovista:analisis-listo', actualizarBotones);
     const A = (typeof lastAnalysis !== 'undefined') ? lastAnalysis : null;
     const inicio = [
       { title: 'UBICACIÓN DE LA PARCELA', rows: [
-        'Parcela: ' + (val('terrenoNombre') || 'sin nombre'),
-        'Localidad: ' + val('locationName'), 'País: ' + domText($('countryBadge')),
-        'Latitud: ' + val('lat'), 'Longitud: ' + val('lon'),
-        ...(A && A.elev !== null ? ['Elevación (grilla NASA POWER): ' + Math.round(A.elev) + ' m'] : [])
+        ['Parcela', val('terrenoNombre') || 'sin nombre'],
+        ['Localidad', val('locationName')], ['País', domText($('countryBadge'))],
+        ['Latitud', val('lat')], ['Longitud', val('lon')],
+        ...(A && A.elev !== null ? [['Elevación (grilla NASA POWER)', Math.round(A.elev) + ' m']] : [])
       ] },
       { title: 'CULTIVO Y CONFIGURACIÓN DEL ANÁLISIS', rows: [
-        'Cultivo a sembrar: ' + sel('crop'),
-        'Duración del cultivo: ' + val('cropDuration'),
-        'Fecha de inicio: ' + (val('startDate').split('-').reverse().join('/') || 'no indicada'),
-        'Fecha de finalización: ' + (val('startDate') || val('endDate') === 'No aplica' ? val('endDate') : 'no calculada (falta fecha de inicio)'),
-        'Cultivo anterior: ' + sel('prevCrop'), 'Prioridad: ' + sel('priority'),
-        'Promedio histórico: ' + val('climYears') + ' año(s) y ' + val('climMonths') + ' mes(es)',
-        'Período reciente: ' + sel('windowDays'),
-        'Escenario: lluvia ' + val('rainAdj') + '%, temperatura ' + val('tempAdj') + ' °C',
-        'Capa satelital NASA seleccionada: ' + (sel('gibsLayer') || 'ninguna')
+        ['Cultivo a sembrar', sel('crop')],
+        ['Duración del cultivo', val('cropDuration')],
+        ['Fecha de inicio', val('startDate').split('-').reverse().join('/') || 'no indicada'],
+        ['Fecha de finalización', val('startDate') || val('endDate') === 'No aplica' ? val('endDate') : 'no calculada (falta fecha de inicio)'],
+        ['Cultivo anterior', sel('prevCrop')], ['Prioridad', sel('priority')],
+        ['Promedio histórico', val('climYears') + ' año(s) y ' + val('climMonths') + ' mes(es)'],
+        ['Período reciente', sel('windowDays')],
+        ['Escenario', 'lluvia ' + val('rainAdj') + '%, temperatura ' + val('tempAdj') + ' °C'],
+        ['Capa satelital NASA seleccionada', sel('gibsLayer') || 'ninguna']
       ] }
     ];
     if (!A) return { inicio, analisis: [{ title: 'ANÁLISIS CLIMÁTICO NASA POWER', rows: ['No se ejecutó «Analizar parcela»: este PDF incluye solo los datos manuales.'] }] };
-    const stats = [...document.querySelectorAll('#statsGrid .stat')].map(s => domText(s.querySelector('.label')) + ': ' + domText(s.querySelector('.value')));
+    const stats = [...document.querySelectorAll('#statsGrid .stat')].map(s => [domText(s.querySelector('.label')), domText(s.querySelector('.value'))]);
     const checks = [...document.querySelectorAll('#cropChecklist .verdict-text')].map(e => domText(e).replace(/^-\s*/, ''));
-    const strat = [...document.querySelectorAll('#strategyGrid .strat')].flatMap(c => [
-      domText(c.querySelector('.strat-tag')) + ' - ' + domText(c.querySelector('.strat-crop')) + ': ' + domText(c.querySelector('.strat-score')),
-      '   ' + [...c.querySelectorAll('.bar')].map(b => domText(b.querySelector('span')) + ' ' + b.querySelector('i').style.width).join(' | '),
-      ...[...c.querySelectorAll('h4')].map(h => domText(h) + ': ' + [...h.nextElementSibling.children].map(domText).join(' / '))
+    const cards = [...document.querySelectorAll('#strategyGrid .strat')];
+    const stratTable = cards.map(c => [domText(c.querySelector('.strat-tag')), domText(c.querySelector('.strat-crop')), domText(c.querySelector('.strat-score')), ...[...c.querySelectorAll('.bar i')].map(i => i.style.width)]);
+    const stratDetail = cards.flatMap(c => [
+      domText(c.querySelector('.strat-tag')) + ' - ' + domText(c.querySelector('.strat-crop')),
+      ...[...c.querySelectorAll('h4')].map(h => '   ' + domText(h) + ': ' + [...h.nextElementSibling.children].map(domText).join(' / '))
     ]);
     const gaps = [...document.querySelectorAll('#gapsList li')].map(domText);
     return { inicio, analisis: [
       { title: 'ESTADO HÍDRICO GENERAL', rows: [domText($('dot')) + ': ' + domText($('verdictText'))] },
       { title: 'ÚLTIMOS ' + A.windowDays + ' DÍAS VS. CLIMATOLOGÍA (' + A.spanLabel + ')', rows: stats },
       { title: 'RECOMENDACIÓN PARA TU CULTIVO', rows: [domText($('cropDot')) + ': ' + domText($('cropVerdictText')), ...checks, domText($('rotationNote'))].filter(Boolean) },
-      { title: 'COMPARACIÓN DE ESTRATEGIAS DE ROTACIÓN', rows: [domText($('strategyNote')), ...strat].filter(Boolean) },
+      { title: 'COMPARACIÓN DE ESTRATEGIAS DE ROTACIÓN', rows: [domText($('strategyNote'))].filter(Boolean),
+        table: { head: ['Estrategia', 'Cultivo', 'Puntaje', 'Clima', 'Rotación', 'Agua', 'Suelo', 'Erosión'], widths: [44, 28, 16, 17, 18, 17, 17, 17], body: stratTable } },
+      { title: 'DETALLE DE LAS ESTRATEGIAS', rows: stratDetail },
       { title: 'CALENDARIO CLIMÁTICO ANUAL', rows: $('annualNote').innerHTML.split(/<br\s*\/?>/i).map(h => { const t = document.createElement('div'); t.innerHTML = h; return domText(t); }).filter(Boolean) },
       { title: 'QUÉ NO SABEMOS Y DÓNDE SE NECESITA CRITERIO LOCAL', rows: gaps }
     ] };
@@ -139,29 +142,29 @@ document.addEventListener('agrovista:analisis-listo', actualizarBotones);
     if (!d.maquinas.length && !d.servicios.length && !d.gastos.length) return [];
     const money = n => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(Number(n) || 0);
     const fecha = f => String(f || '').split('-').reverse().join('/') || 's/f';
-    const lista = (arr, fn) => {
+    const filas = (arr, fn, n) => {
       const rows = arr.slice(0, 40).map(fn);
-      if (arr.length > 40) rows.push('... y ' + (arr.length - 40) + ' más');
-      return rows.length ? rows : ['Sin registros'];
+      if (arr.length > 40) rows.push(['... y ' + (arr.length - 40) + ' más', ...Array(n - 1).fill('')]);
+      return rows;
     };
     const nombreMaq = id => (d.maquinas.find(m => m.id === id) || {}).nombre || 'Máquina eliminada';
     const totalG = d.gastos.reduce((a, g) => a + (Number(g.importe) || 0), 0);
     const totalS = d.servicios.reduce((a, s) => a + (Number(s.costo) || 0), 0);
     return [
       { title: 'GESTIÓN AGRÍCOLA - RESUMEN', rows: [
-        'Máquinas registradas: ' + d.maquinas.length,
-        'Mantenimientos pendientes: ' + d.servicios.filter(s => s.estado === 'Pendiente').length,
-        'Servicios registrados: ' + d.servicios.length,
-        'Gastos generales: ' + money(totalG),
-        'Costos de mantenimiento: ' + money(totalS),
-        'Total de costos registrados: ' + money(totalG + totalS)
+        ['Máquinas registradas', d.maquinas.length],
+        ['Mantenimientos pendientes', d.servicios.filter(s => s.estado === 'Pendiente').length],
+        ['Servicios registrados', d.servicios.length],
+        ['Gastos generales', money(totalG)],
+        ['Costos de mantenimiento', money(totalS)],
+        ['Total de costos registrados', money(totalG + totalS)]
       ] },
-      { title: 'GESTIÓN AGRÍCOLA - MAQUINARIA', rows: lista(d.maquinas, m =>
-        [m.nombre, m.tipo, [m.marca, m.modelo].filter(Boolean).join(' / '), m.anio, m.estado].filter(Boolean).join(' - ') + (m.notas ? ' (' + m.notas + ')' : '')) },
-      { title: 'GESTIÓN AGRÍCOLA - MANTENIMIENTOS', rows: lista(d.servicios, s =>
-        nombreMaq(s.maquina) + ' - ' + s.tipo + ' - ' + fecha(s.fecha) + ' - ' + s.estado + ' - ' + money(s.costo) + (s.detalle ? ' (' + s.detalle + ')' : '')) },
-      { title: 'GESTIÓN AGRÍCOLA - GASTOS', rows: lista(d.gastos, g =>
-        fecha(g.fecha) + ' - ' + g.categoria + ' - ' + (g.parcela || 'sin parcela') + ' - ' + money(g.importe) + (g.detalle ? ' (' + g.detalle + ')' : '')) }
+      { title: 'GESTIÓN AGRÍCOLA - MAQUINARIA', rows: [], table: { head: ['Máquina', 'Tipo', 'Marca / modelo', 'Año', 'Estado', 'Notas'], widths: [34, 24, 32, 12, 24, 48],
+        body: filas(d.maquinas, m => [m.nombre, m.tipo, [m.marca, m.modelo].filter(Boolean).join(' / ') || '-', m.anio || '-', m.estado, m.notas || '-'], 6) } },
+      { title: 'GESTIÓN AGRÍCOLA - MANTENIMIENTOS', rows: [], table: { head: ['Máquina', 'Trabajo', 'Fecha', 'Estado', 'Costo', 'Detalle'], widths: [34, 30, 20, 20, 28, 42],
+        body: filas(d.servicios, s => [nombreMaq(s.maquina), s.tipo, fecha(s.fecha), s.estado, money(s.costo), s.detalle || '-'], 6) } },
+      { title: 'GESTIÓN AGRÍCOLA - GASTOS', rows: [], table: { head: ['Fecha', 'Categoría', 'Parcela', 'Descripción', 'Importe'], widths: [20, 28, 32, 60, 34],
+        body: filas(d.gastos, g => [fecha(g.fecha), g.categoria, g.parcela || 'sin parcela', g.detalle || '-', money(g.importe)], 5) } }
     ];
   }
   async function satelliteImage() {
@@ -217,6 +220,31 @@ const informe = report || {
       for (const chunk of chunks) { if (y + step > bottom) nextPage(); doc.text(chunk, margin, y); y += step; }
       y += options.after ?? 2;
     }
+    function table(head, body, widths) {
+      const pad = 1.8, size = 8.5, lh = 3.6;
+      const measure = (cells, bold) => {
+        doc.setFont('helvetica', bold ? 'bold' : 'normal'); doc.setFontSize(size);
+        const ls = cells.map((c, i) => doc.splitTextToSize(pdfText(c), widths[i] - 2 * pad));
+        return { ls, h: Math.max(...ls.map(l => l.length)) * lh + 2 * pad };
+      };
+      const draw = (cells, mode) => {
+        const m = measure(cells, mode === 'head');
+        if (y + m.h > bottom) { nextPage(); if (mode !== 'head') draw(head, 'head'); }
+        let x = margin;
+        m.ls.forEach((l, i) => {
+          if (mode === 'head') doc.setFillColor(22, 98, 61); else if (mode === 'even') doc.setFillColor(238, 244, 240); else doc.setFillColor(255, 255, 255);
+          doc.setDrawColor(190, 200, 194); doc.rect(x, y, widths[i], m.h, 'FD');
+          if (mode === 'head') doc.setTextColor(255, 255, 255); else doc.setTextColor(40, 47, 48);
+          doc.setFont('helvetica', mode === 'head' ? 'bold' : 'normal'); doc.setFontSize(size);
+          doc.text(l, x + pad, y + pad + 2.4);
+          x += widths[i];
+        });
+        y += m.h;
+      };
+      draw(head, 'head');
+      body.forEach((r, i) => draw(r, i % 2 ? 'even' : 'odd'));
+      doc.setTextColor(40, 47, 48); doc.setFont('helvetica', 'normal');
+    }
     doc.addImage(LOGO_PDF, 'JPEG', margin, 10, 24, 24);
     doc.setFont('helvetica', 'bold'); doc.setFontSize(22); doc.setTextColor(22, 98, 61);
     doc.text('AgroNasa', margin + 29, 21);
@@ -228,7 +256,14 @@ const informe = report || {
     y = 40;
     line('Fecha: ' + informe.date.toLocaleString('es-AR', { hourCycle: 'h23' }), {after:5});
     const app = collectApp();
-    const block = s => { line(s.title, {size:11,bold:true,after:3}); s.rows.forEach(r => line('- ' + r, {after:1.5})); y += 4; };
+    const block = s => {
+      line(s.title, {size:11,bold:true,after:3});
+      const rows = s.rows || [];
+      if (rows.length && rows.every(Array.isArray)) { table(['Dato', 'Valor'], rows, [62, 112]); y += 3; }
+      else rows.forEach(r => line('- ' + r, {after:1.5}));
+      if (s.table) { if (s.table.body.length) { table(s.table.head, s.table.body, s.table.widths); y += 4; } else line('- Sin registros', {after:1.5}); }
+      y += 4;
+    };
     app.inicio.forEach(block);
     const sat = await satelliteImage();
     if (sat) {
@@ -244,17 +279,7 @@ const camposManuales = Object.entries(labels)
   .filter(([key]) => key !== 'terrenoNombre' && informe.fields[key]);
 
 if (camposManuales.length) {
-  line('DATOS DECLARADOS POR EL AGRICULTOR', {
-    size: 11,
-    bold: true,
-    after: 3
-  });
-
-  camposManuales.forEach(([key, label]) => {
-    line(label + ': ' + informe.fields[key], { after: 1 });
-  });
-
-  y += 5;
+  block({ title: 'DATOS DECLARADOS POR EL AGRICULTOR', rows: camposManuales.map(([key, label]) => [label, informe.fields[key]]) });
 }
 
 app.analisis.forEach(block);
