@@ -11,7 +11,24 @@
   const pdfButton = document.getElementById('terrenoPdf');
   const whatsappButton = document.getElementById('terrenoWhatsapp');
   let report = null;
-  function invalidateReport() { report = null; pdfButton.disabled = true; whatsappButton.disabled = true; }
+  
+function hayAnalisisParcela() {
+  return typeof lastAnalysis !== 'undefined' && !!lastAnalysis;
+}
+
+function actualizarBotones() {
+  const disponible = hayAnalisisParcela();
+  pdfButton.disabled = !disponible;
+  whatsappButton.disabled = !disponible;
+}
+
+function invalidateReport() {
+  report = null;
+  actualizarBotones();
+}
+
+document.addEventListener('agrovista:analisis-listo', actualizarBotones);
+
   const escapeHtml = (v) => String(v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const value = (id) => document.getElementById(id).value.trim();
   const number = (id) => value(id) === '' ? null : Number(value(id));
@@ -138,8 +155,18 @@
     } catch (e) { console.error('No se pudo obtener la vista satelital:', e); return null; }
   }
   async function buildPdf() {
-    if (!report) { message.textContent = 'Primero calculá el análisis personalizado.'; return null; }
-    if (typeof lastAnalysis === 'undefined' || !lastAnalysis) { message.textContent = 'Primero completá los datos de la parcela y presioná «Analizar parcela».'; return null; }
+    
+if (!hayAnalisisParcela()) {
+  message.textContent = 'Primero seleccioná una parcela, elegí un cultivo y presioná «Analizar parcela».';
+  return null;
+}
+
+const informe = report || {
+  date: new Date(),
+  fields: {},
+  lines: []
+};
+
     if (!window.jspdf?.jsPDF) { message.textContent = 'No se pudo cargar jsPDF. Revisá tu conexión a Internet.';
       console.error('La biblioteca jsPDF no está disponible.');
       return null;
@@ -161,9 +188,9 @@
     doc.setFont('helvetica', 'bold'); doc.setFontSize(22); doc.setTextColor(22, 98, 61);
     doc.text('AgroNasa', margin + 29, 21);
     doc.setFont('helvetica', 'normal'); doc.setFontSize(11); doc.setTextColor(40, 47, 48);
-    doc.text('Análisis personalizado de parcela', margin + 29, 29);
+    doc.text('Informe de análisis de parcela', margin + 29, 29);
     y = 40;
-    line('Fecha: ' + report.date.toLocaleString('es-AR', { hourCycle: 'h23' }), {after:5});
+    line('Fecha: ' + informe.date.toLocaleString('es-AR', { hourCycle: 'h23' }), {after:5});
     const app = collectApp();
     const block = s => { line(s.title, {size:11,bold:true,after:3}); s.rows.forEach(r => line('- ' + r, {after:1.5})); y += 4; };
     app.inicio.forEach(block);
@@ -176,12 +203,38 @@
     } else {
       line('No se pudo incluir la vista satelital (sin conexión o servicio no disponible).', {size:9,after:5});
     }
-    line('DATOS DECLARADOS POR EL AGRICULTOR', {size:11,bold:true,after:3});
-    for (const [key,label] of Object.entries(labels)) if (report.fields[key]) line(label + ': ' + report.fields[key], {after:1});
-    y += 5;
-    app.analisis.forEach(block);
-    line('RESULTADOS DEL ANÁLISIS', {size:11,bold:true,after:4});
-    report.lines.forEach((item,i) => line((i+1) + '. ' + item, {after:4}));
+    
+const camposManuales = Object.entries(labels)
+  .filter(([key]) => informe.fields[key]);
+
+if (camposManuales.length) {
+  line('DATOS DECLARADOS POR EL AGRICULTOR', {
+    size: 11,
+    bold: true,
+    after: 3
+  });
+
+  camposManuales.forEach(([key, label]) => {
+    line(label + ': ' + informe.fields[key], { after: 1 });
+  });
+
+  y += 5;
+}
+
+app.analisis.forEach(block);
+
+if (report && informe.lines.length) {
+  line('RESULTADOS DEL ANÁLISIS MANUAL', {
+    size: 11,
+    bold: true,
+    after: 4
+  });
+
+  informe.lines.forEach((item, i) => {
+    line((i + 1) + '. ' + item, { after: 4 });
+  });
+}
+
     y += 3;
     line('ALCANCE Y LIMITACIONES', {size:11,bold:true,after:3});
     line('Los resultados del terreno se calculan solo con los datos manuales ingresados; las secciones climáticas provienen de NASA POWER y de las reglas del prototipo. Son estimaciones orientativas: no son un diagnóstico agronómico, una predicción de cosecha ni una recomendación de fertilización. Validar con un técnico local.', {after:3});
