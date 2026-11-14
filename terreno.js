@@ -68,7 +68,11 @@
   };
   function buildPdf() {
     if (!report) { message.textContent = 'Primero calculá el análisis personalizado.'; return null; }
-    if (!window.jspdf || !window.jspdf.jsPDF) { message.textContent = 'No se pudo cargar el generador de PDF. Comprobá tu conexión a Internet.'; return null; }
+    if (!window.jspdf?.jsPDF) { message.textContent = 'No se pudo cargar jsPDF. Revisá tu conexión a Internet.';
+      console.error('La biblioteca jsPDF no está disponible.');
+      return null;
+    }
+
     const doc = new window.jspdf.jsPDF({unit:'mm',format:'a4'});
     const margin = 18, maxWidth = 174, bottom = 276;
     let y = 20, page = 1;
@@ -98,17 +102,58 @@
   }
   function fileName() { return 'AgroVista_analisis_' + new Date().toISOString().slice(0,10) + '.pdf'; }
   pdfButton.addEventListener('click', () => { const doc = buildPdf(); if (doc) { doc.save(fileName()); message.textContent = 'PDF generado y descargado.'; } });
-  whatsappButton.addEventListener('click', async () => {
-    const doc = buildPdf(); if (!doc) return;
-    const file = new File([doc.output('blob')], fileName(), {type:'application/pdf'});
-    if (navigator.share && navigator.canShare && navigator.canShare({files:[file]})) {
-      try { await navigator.share({files:[file],title:'Análisis de parcela - AgroVista',text:'Adjunto el análisis personalizado de la parcela.'}); message.textContent = 'Se abrió el menú para compartir. Seleccioná WhatsApp para enviar el PDF.'; }
-      catch (err) { if (err.name !== 'AbortError') message.textContent = 'No se pudo compartir. Descargá el PDF y adjuntalo en WhatsApp.'; }
+  
+whatsappButton.addEventListener('click', async () => {
+  const doc = buildPdf();
+  if (!doc) return;
+
+  const nombre = fileName();
+  const archivo = new File(
+    [doc.output('blob')],
+    nombre,
+    { type: 'application/pdf' }
+  );
+
+  try {
+    if (
+      navigator.share &&
+      navigator.canShare?.({ files: [archivo] })
+    ) {
+      await navigator.share({
+        files: [archivo],
+        title: 'Análisis AgroVista',
+        text: 'Análisis personalizado de mi parcela'
+      });
+
+      message.textContent =
+        'Seleccioná WhatsApp para enviar el documento.';
     } else {
-      doc.save(fileName());
-      message.textContent = 'Tu navegador no permite adjuntar directamente el PDF. Se descargó el archivo: abrí WhatsApp y envialo como documento.';
+      doc.save(nombre);
+
+      const texto = encodeURIComponent(
+        'Te comparto mi análisis personalizado ' +
+        'de AgroVista. Adjunto el informe en PDF.'
+      );
+
+      window.open(
+        'https://wa.me/?text=' + texto,
+        '_blank',
+        'noopener,noreferrer'
+      );
+
+      message.textContent =
+        'Se descargó el PDF. Adjuntalo como documento ' +
+        'en la conversación de WhatsApp.';
     }
-  });
+  } catch (error) {
+    if (error.name !== 'AbortError') {
+      console.error(error);
+      message.textContent =
+        'No se pudo compartir. Descargá el PDF ' +
+        'y adjuntalo manualmente en WhatsApp.';
+    }
+  }
+});
 
   try {
     const saved = JSON.parse(localStorage.getItem(storageKey) || 'null');
