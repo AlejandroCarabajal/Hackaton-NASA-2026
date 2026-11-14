@@ -749,3 +749,57 @@ input[type="range"] {
     width: 100%;
   }
 }
+
+/* ===== Fuente desplegable ===== */
+.source-box {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+.source-box summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  list-style: none;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text);
+  padding: 7px 14px;
+  border: 1.5px solid var(--leaf);
+  border-radius: 999px;
+  user-select: none;
+}
+.source-box summary::-webkit-details-marker {
+  display: none;
+}
+.source-box summary::after {
+  content: "▾";
+  font-size: 12px;
+  transition: transform 0.15s ease;
+}
+.source-box[open] summary::after {
+  transform: rotate(180deg);
+}
+.source-box summary:hover,
+.source-box[open] summary {
+  color: var(--leaf);
+  background: rgba(95, 212, 138, 0.12);
+}
+.source-box summary:focus-visible {
+  outline: 1px solid var(--leaf);
+  outline-offset: 2px;
+}
+.source-box-body {
+  margin-top: 8px;
+  padding: 10px 12px;
+  background: #0d1a14;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--text-dim);
+}

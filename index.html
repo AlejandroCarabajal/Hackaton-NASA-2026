@@ -64,7 +64,7 @@
       </div>
     </div>
 
-    <div class="source">Fuente: OpenStreetMap Nominatim y Photon (geocodificación y sugerencias de búsqueda), Esri World Imagery (base), capas opcionales de NASA GIBS (SMAP, GPM IMERG, MODIS)</div>
+    <details class="source-box"><summary>Fuente</summary><div class="source-box-body">OpenStreetMap Nominatim y Photon (geocodificación y sugerencias de búsqueda), Esri World Imagery (base), capas opcionales de NASA GIBS (SMAP, GPM IMERG, MODIS)</div></details>
   </div>
 
   <div class="panel">
@@ -97,7 +97,7 @@
         <input id="endDate" type="text" value="—" readonly style="cursor:default;" />
       </div>
     </div>
-    <div class="source">Fuente: FAO Crop Calendar + base de datos agronómica de referencia. Duraciones típicas orientativas; varían según variedad, clima y manejo.</div>
+    <details class="source-box"><summary>Fuente</summary><div class="source-box-body">FAO Crop Calendar + base de datos agronómica de referencia. Duraciones típicas orientativas; varían según variedad, clima y manejo.</div></details>
   </div>
 
   <div class="panel">
@@ -157,13 +157,13 @@
       <div class="dot" id="dot">--</div>
       <div class="verdict-text" id="verdictText"></div>
     </div>
-    <div class="source">Fuente: NASA POWER (precipitación, temperatura, humedad) comparado con la climatología de <span class="clim-span">10 años</span></div>
+    <details class="source-box"><summary>Fuente</summary><div class="source-box-body">NASA POWER (precipitación, temperatura, humedad) comparado con la climatología de <span class="clim-span">10 años</span></div></details>
   </div>
 
   <div class="panel" id="statsPanel" style="display:none;">
     <div class="panel-title">05 — Últimos <span class="win-days">14</span> días vs. climatología (promedio de <span class="clim-span">10 años</span>)</div>
     <div class="grid" id="statsGrid"></div>
-    <div class="source">Fuente: NASA POWER API (datos diarios, AG community). Promedio histórico: mismo período calendario en los años elegidos. Heladas: T mín ≤ 2 °C. Calor extremo: T máx ≥ 35 °C</div>
+    <details class="source-box"><summary>Fuente</summary><div class="source-box-body">NASA POWER API (datos diarios, AG community). Promedio histórico: mismo período calendario en los años elegidos. Heladas: T mín ≤ 2 °C. Calor extremo: T máx ≥ 35 °C</div></details>
   </div>
 
   <div class="panel" id="cropPanel" style="display:none;">
@@ -174,7 +174,7 @@
     </div>
     <div id="cropChecklist" style="margin-top:16px;"></div>
     <div id="rotationNote" style="margin-top:14px;"></div>
-    <div class="source">Fuente: FAO + rangos agronómicos de referencia (no reemplaza asesoramiento profesional)</div>
+    <details class="source-box"><summary>Fuente</summary><div class="source-box-body">FAO + rangos agronómicos de referencia (no reemplaza asesoramiento profesional)</div></details>
   </div>
 
   <div class="panel" id="strategyPanel" style="display:none;">
@@ -196,13 +196,13 @@
       <span><i class="dotleg" style="background:#e2624f"></i>Temperatura fuera de rango</span>
     </div>
     <div class="verdict-text annual-note" id="annualNote"></div>
-    <div class="source">Fuente: NASA POWER API (PRECTOTCORR, T2M, T2M_MIN), promedio de años completos</div>
+    <details class="source-box"><summary>Fuente</summary><div class="source-box-body">NASA POWER API (PRECTOTCORR, T2M, T2M_MIN), promedio de años completos</div></details>
   </div>
 
   <div class="panel" id="chartPanel" style="display:none;">
     <div class="panel-title">09 — Precipitación diaria (mm) — últimos <span class="win-days">14</span> días</div>
     <div class="chart-wrap"><svg id="chart" width="800" height="220" viewBox="0 0 800 220"></svg></div>
-    <div class="source">Fuente: NASA POWER API (PRECTOTCORR)</div>
+    <details class="source-box"><summary>Fuente</summary><div class="source-box-body">NASA POWER API (PRECTOTCORR)</div></details>
   </div>
 
   <div class="panel" id="gapsPanel" style="display:none;">
