@@ -22,8 +22,6 @@ const PRIORITY_WEIGHTS = {
   ingreso:     { clima: 0.40, rot: 0.25, agua: 0.15,  suelo: 0.10,  erosion: 0.10 }, // sin datos de mercado: criterio equilibrado
 };
 
-<<<<<<< HEAD
-=======
 // Temperaturas cardinales, de germinación y de siembra (°C). Solo maíz, soja, alfalfa y sorgo.
 // Fuente: cuadros del equipo, basados en INTA y bibliografía agrometeorológica (no verificados por la app).
 //  base: temperatura base de crecimiento · opt: óptima · max: máxima de desarrollo (referencia orientativa de estrés)
@@ -37,7 +35,6 @@ const CROP_AG = {
 };
 const SOIL_EST_DAYS = 5;   // la temperatura del suelo se estima con el promedio de T2M de los últimos 5 días
 
->>>>>>> d19b908dfdf7edb812f135d8ed31e2df4b33df25
 let lastAnalysis = null;
 let lastCropKey = null;
 let lastPrevKey = null;
@@ -138,12 +135,9 @@ function buildAnalysis(data, endDate, recentStart, years){
       days: rk.length, rain: rain.sum, rainN: rain.n, temp: temp.avg, hum: hum.avg,
       root: root.avg, top: top.avg, tmin: tmin.avg, tmax: tmax.avg,
       frostDays, heatDays, series,
-<<<<<<< HEAD
-=======
       tempDaily: rk.map(k => numAt(P.T2M, k)),
       tmaxDaily: rk.map(k => numAt(P.T2M_MAX, k)),
       tminDaily: rk.map(k => numAt(P.T2M_MIN, k)),
->>>>>>> d19b908dfdf7edb812f135d8ed31e2df4b33df25
     },
     clim, monthly, years, windowDays: rk.length,
     elev: coords && typeof coords[2] === 'number' ? coords[2] : null,
@@ -164,8 +158,6 @@ function adjustedConditions(rec, sc){
   return { root, temp: rec.temp + sc.tempAdj };
 }
 
-<<<<<<< HEAD
-=======
 /* ---------- chequeos de temperatura de siembra y cardinales (maíz, soja, alfalfa, sorgo) ---------- */
 function agTempChecks(cropKey, rec, tempAdj){
   const ag = CROP_AG[cropKey];
@@ -220,7 +212,6 @@ function agTempChecks(cropKey, rec, tempAdj){
   return { evidence, risks, blockers, soilEst };
 }
 
->>>>>>> d19b908dfdf7edb812f135d8ed31e2df4b33df25
 /* ---------- puntaje de estrategias ---------- */
 function scoreCrop(key, prevKey, soil, temp, priority){
   const c = CROP_DB[key];
@@ -289,13 +280,10 @@ function buildStrategyCard(title, key, prevKey, A, adj, sc, highlight){
   if(s.parts.rot >= 0.9) benefits.push('Rotación favorable respecto del cultivo anterior.');
   if(!benefits.length) benefits.push('Sin beneficios de suelo destacados según las reglas del prototipo.');
 
-<<<<<<< HEAD
-=======
   const agc = agTempChecks(key, rec, sc.tempAdj);
   if(agc){
     agc.evidence.forEach(t => evidence.push(t));
   }
->>>>>>> d19b908dfdf7edb812f135d8ed31e2df4b33df25
   const gaps = [
     'Sin datos de suelo de la parcela (textura, materia orgánica, compactación).',
     'Sin precios ni mercado local: el ingreso potencial no está evaluado.',
@@ -310,13 +298,10 @@ function buildStrategyCard(title, key, prevKey, A, adj, sc, highlight){
   if(rec.heatDays > 0 && t1 <= 27) risks.push('Hubo días de calor extremo recientes: riesgo para un cultivo de clima templado.');
   if(prevKey && CROP_DB[prevKey] && (prevKey === key || CROP_DB[prevKey].family === c.family)) risks.push('Misma familia que el cultivo anterior: mayor presión de plagas y enfermedades.');
   if(s.legume) risks.push('Conviene validar inoculante y cepa de rizobios adecuados para la zona.');
-<<<<<<< HEAD
-=======
   if(agc){
     agc.blockers.forEach(b => risks.push(b.text.charAt(0).toUpperCase() + b.text.slice(1)));
     agc.risks.forEach(t => risks.push(t));
   }
->>>>>>> d19b908dfdf7edb812f135d8ed31e2df4b33df25
   risks.push('Validar con un agrónomo o técnico local antes de decidir.');
 
   const bar = (label, v) => `<div class="bar"><span>${label}</span><div class="bar-track"><i style="width:${pct(v)}%"></i></div></div>`;
@@ -428,11 +413,6 @@ function renderCrop(A, adj, sc){
     document.getElementById('rotationNote').innerHTML = '';
   } else {
     const r = evaluateCrop(lastCropKey, lastPrevKey, adj.root, adj.temp);
-<<<<<<< HEAD
-    dot.style.background = r.dotColor; dot.style.color = '#0c1712'; dot.textContent = r.dotLabel;
-    document.getElementById('cropVerdictText').innerHTML = r.verdict;
-    document.getElementById('cropChecklist').innerHTML = r.checklist.map(c => `<div class="verdict-text" style="margin-bottom:6px;">• ${c}</div>`).join('') + scenarioTxt;
-=======
     const agc = agTempChecks(lastCropKey, A.recent, sc.tempAdj);
     let dotColor = r.dotColor, dotLabel = r.dotLabel, verdict = r.verdict;
     let items = r.checklist.slice();
@@ -450,7 +430,6 @@ function renderCrop(A, adj, sc){
     dot.style.background = dotColor; dot.style.color = '#0c1712'; dot.textContent = dotLabel;
     document.getElementById('cropVerdictText').innerHTML = verdict;
     document.getElementById('cropChecklist').innerHTML = items.map(c => `<div class="verdict-text" style="margin-bottom:6px;">• ${c}</div>`).join('') + scenarioTxt;
->>>>>>> d19b908dfdf7edb812f135d8ed31e2df4b33df25
     document.getElementById('rotationNote').innerHTML = r.rotationHtml;
   }
   document.getElementById('cropPanel').style.display = 'block';
@@ -521,11 +500,8 @@ function renderAnnual(A){
 function renderGaps(A){
   const items = [
     'Humedad de suelo: es la modelada por NASA POWER (GWETROOT/GWETTOP), no una medición satelital puntual de SMAP. Las capas SMAP del mapa sirven como referencia visual.',
-<<<<<<< HEAD
-=======
     'Temperatura del suelo: NASA POWER no la entrega a 10 cm. Para maíz, soja, alfalfa y sorgo se estima con el promedio de la temperatura del aire de los últimos 5 días; conviene medirla en la parcela.',
     'Solo maíz, soja, alfalfa y sorgo tienen temperaturas de siembra, germinación y cardinales (cuadros del equipo basados en INTA y bibliografía). Los demás cultivos usan un rango aproximado. El requisito de 3 días seguidos para el sorgo es un supuesto del prototipo.',
->>>>>>> d19b908dfdf7edb812f135d8ed31e2df4b33df25
     'Suelo de la parcela (textura, materia orgánica, drenaje, compactación): no está incluido. Requiere análisis local o bases como Web Soil Survey/SSURGO (EE. UU.).',
     'Erosión y pendiente: no se calcula con SRTM; la erosión se estima solo por el tipo de cultivo (cobertura/perennes).',
     'Mercado e ingresos: sin datos de precios ni demanda local.',
