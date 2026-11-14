@@ -286,6 +286,61 @@ footer {
   padding: 10px 16px;
   white-space: nowrap;
 }
+.search-field {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+.search-field input {
+  width: 100%;
+}
+.search-suggestions {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 1200; /* por encima de los controles de Leaflet */
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
+  max-height: 300px;
+  overflow-y: auto;
+}
+.search-suggestion {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 10px;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+}
+.search-suggestion:hover,
+.search-suggestion.active {
+  background: var(--leaf-dim);
+}
+.search-suggestion-type {
+  flex-shrink: 0;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.search-suggestion:hover .search-suggestion-type,
+.search-suggestion.active .search-suggestion-type {
+  color: var(--text);
+}
+.search-suggestion-empty {
+  padding: 9px 10px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
 
 #map {
   width: 100%;

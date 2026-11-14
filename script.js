@@ -395,10 +395,180 @@ async function searchLocation(){
   }
 }
 
-searchBtn.addEventListener('click', searchLocation);
-searchInput.addEventListener('keydown', (e) => {
-  if(e.key === 'Enter') searchLocation();
+searchBtn.addEventListener('click', () => { closeSuggestions(); searchLocation(); });
+
+/* ---------- Autocompletado de ubicaciones (localidades, provincias/estados y países de todo el mundo) ----------
+   Usa Photon (photon.komoot.io), un geocodificador público sobre datos de OpenStreetMap pensado para
+   "buscar mientras se escribe". No requiere API key. */
+const suggestionsBox = document.getElementById('searchSuggestions');
+const SUGGEST_MIN_CHARS = 2;
+const SUGGEST_DELAY_MS = 300;
+const SUGGEST_LAYERS = ['country', 'state', 'county', 'city', 'district', 'locality'];
+const SUGGEST_TYPE_LABEL = { country: 'País', state: 'Provincia / Estado', county: 'Departamento', city: 'Localidad', district: 'Localidad', locality: 'Localidad' };
+const SUGGEST_ZOOM = { country: 4, state: 7, county: 9, city: 12, district: 13, locality: 13 };
+// Abreviaturas frecuentes al escribir (ej.: "La Banda, Sgo del Estero")
+const SUGGEST_ALIASES = [
+  [/\bsgo\b\.?/gi, 'santiago'],
+  [/\bbs\.?\s*as\b\.?/gi, 'buenos aires'],
+  [/\bpcia\b\.?/gi, 'provincia'],
+  [/\bcba\b\.?/gi, 'córdoba'],
+  [/\bsta\b\.?/gi, 'santa'],
+  [/\bgral\b\.?/gi, 'general']
+];
+let suggestTimer = null;
+let suggestAbort = null;
+let suggestItems = [];
+let suggestActive = -1;
+let regionNamesEs = null;
+try { regionNamesEs = new Intl.DisplayNames(['es'], { type: 'region' }); } catch(e){ /* navegador sin soporte */ }
+
+function expandAliases(text){
+  return SUGGEST_ALIASES.reduce((t, [re, full]) => t.replace(re, full), text);
+}
+
+function countryNameEs(props){
+  if(regionNamesEs && props.countrycode){
+    try { return regionNamesEs.of(props.countrycode.toUpperCase()) || props.country; } catch(e){ /* código inválido */ }
+  }
+  return props.country || '';
+}
+
+function suggestionFromFeature(feature){
+  const p = feature.properties || {};
+  const coords = feature.geometry && feature.geometry.coordinates;
+  if(!coords || !p.name) return null;
+  // Entradas administrativas que duplican a la localidad (ej.: "Municipio de Clodomira")
+  if(/^(municipio|comisi[oó]n de fomento|comisi[oó]n municipal) de /i.test(p.name)) return null;
+  const type = p.type || 'city';
+  const country = countryNameEs(p);
+  let parts;
+  if(type === 'country') parts = [country || p.name];
+  else if(type === 'state') parts = [p.name, country];
+  else parts = [p.name, p.state || p.county, country];
+  const label = parts.filter((v, i) => v && parts.indexOf(v) === i).join(', ');
+  return { label, type, lat: coords[1], lon: coords[0] };
+}
+
+async function fetchSuggestions(query){
+  if(suggestAbort) suggestAbort.abort();
+  suggestAbort = new AbortController();
+  const params = new URLSearchParams({ q: expandAliases(query), limit: '10' });
+  SUGGEST_LAYERS.forEach(l => params.append('layer', l));
+  try {
+    const res = await fetch(`https://photon.komoot.io/api/?${params}`, { signal: suggestAbort.signal });
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const seen = new Set();
+    const items = [];
+    (data.features || []).forEach(f => {
+      const s = suggestionFromFeature(f);
+      if(!s || seen.has(s.label)) return;
+      seen.add(s.label);
+      items.push(s);
+    });
+    // Países y provincias primero, después localidades (manteniendo la relevancia dentro de cada grupo)
+    const rank = t => (t === 'country' ? 0 : t === 'state' ? 1 : 2);
+    items.sort((a, b) => rank(a.type) - rank(b.type));
+    if(searchInput.value.trim() === query) renderSuggestions(items.slice(0, 8));
+  } catch(err){
+    if(err.name !== 'AbortError') closeSuggestions();
+  }
+}
+
+function renderSuggestions(items){
+  suggestItems = items;
+  suggestActive = -1;
+  suggestionsBox.textContent = '';
+  if(items.length === 0){
+    const li = document.createElement('li');
+    li.className = 'search-suggestion-empty';
+    li.textContent = 'Sin coincidencias. Probá con otro nombre o tocá "Buscar".';
+    suggestionsBox.appendChild(li);
+  }
+  items.forEach((item, i) => {
+    const li = document.createElement('li');
+    li.className = 'search-suggestion';
+    li.id = 'searchSuggestion' + i;
+    li.setAttribute('role', 'option');
+    const name = document.createElement('span');
+    name.className = 'search-suggestion-name';
+    name.textContent = item.label;
+    const tag = document.createElement('span');
+    tag.className = 'search-suggestion-type';
+    tag.textContent = SUGGEST_TYPE_LABEL[item.type] || 'Lugar';
+    li.append(name, tag);
+    // mousedown (no click) para que se ejecute antes de que el input pierda el foco
+    li.addEventListener('mousedown', (e) => { e.preventDefault(); chooseSuggestion(i); });
+    suggestionsBox.appendChild(li);
+  });
+  suggestionsBox.hidden = false;
+  searchInput.setAttribute('aria-expanded', 'true');
+}
+
+function closeSuggestions(){
+  clearTimeout(suggestTimer);
+  if(suggestAbort) suggestAbort.abort();
+  suggestItems = [];
+  suggestActive = -1;
+  suggestionsBox.hidden = true;
+  suggestionsBox.textContent = '';
+  searchInput.setAttribute('aria-expanded', 'false');
+  searchInput.removeAttribute('aria-activedescendant');
+}
+
+function highlightSuggestion(index){
+  const nodes = suggestionsBox.querySelectorAll('.search-suggestion');
+  nodes.forEach((n, i) => {
+    n.classList.toggle('active', i === index);
+    n.setAttribute('aria-selected', i === index ? 'true' : 'false');
+  });
+  suggestActive = index;
+  if(index >= 0 && nodes[index]){
+    searchInput.setAttribute('aria-activedescendant', nodes[index].id);
+    nodes[index].scrollIntoView({ block: 'nearest' });
+  } else {
+    searchInput.removeAttribute('aria-activedescendant');
+  }
+}
+
+function chooseSuggestion(index){
+  const item = suggestItems[index];
+  if(!item) return;
+  searchInput.value = item.label;
+  closeSuggestions();
+  map.setView([item.lat, item.lon], SUGGEST_ZOOM[item.type] || 12);
+  setMarker(item.lat, item.lon);
+}
+
+searchInput.addEventListener('input', () => {
+  clearTimeout(suggestTimer);
+  const query = searchInput.value.trim();
+  if(query.length < SUGGEST_MIN_CHARS){ closeSuggestions(); return; }
+  suggestTimer = setTimeout(() => fetchSuggestions(query), SUGGEST_DELAY_MS);
 });
+
+searchInput.addEventListener('keydown', (e) => {
+  const open = !suggestionsBox.hidden && suggestItems.length > 0;
+  if(e.key === 'ArrowDown' && open){
+    e.preventDefault();
+    highlightSuggestion((suggestActive + 1) % suggestItems.length);
+  } else if(e.key === 'ArrowUp' && open){
+    e.preventDefault();
+    highlightSuggestion((suggestActive - 1 + suggestItems.length) % suggestItems.length);
+  } else if(e.key === 'Escape'){
+    closeSuggestions();
+  } else if(e.key === 'Enter'){
+    if(open && suggestActive >= 0){
+      e.preventDefault();
+      chooseSuggestion(suggestActive);
+    } else {
+      closeSuggestions();
+      searchLocation();
+    }
+  }
+});
+
+searchInput.addEventListener('blur', () => setTimeout(closeSuggestions, 150));
 
 function fmtDate(d){
   const y = d.getFullYear();
