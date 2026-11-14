@@ -66,6 +66,49 @@
     terrenoFrecuencia:'Intervalo entre riegos (días)', terrenoRendimiento:'Rendimiento esperado (t/ha)',
     terrenoPlagas:'Plagas y enfermedades', terrenoNotas:'Observaciones'
   };
+
+  const pdfText = s => String(s).replace(/\s+/g, ' ').trim()
+    .replace(/≤/g, '<=').replace(/≥/g, '>=').replace(/→/g, '->')
+    .replace(/[−–—]/g, '-').replace(/[•·]/g, '-')
+    .replace(/[^\x20-\x7E -ÿ]/g, '');
+  const domText = el => el ? pdfText(el.textContent) : '';
+  function collectApp() {
+    const $ = id => document.getElementById(id);
+    const val = id => pdfText($(id) ? $(id).value : '');
+    const sel = id => { const s = $(id); return s && s.selectedIndex >= 0 ? pdfText(s.options[s.selectedIndex].textContent) : ''; };
+    const A = (typeof lastAnalysis !== 'undefined') ? lastAnalysis : null;
+    const inicio = [
+      { title: 'UBICACIÓN DE LA PARCELA', rows: [
+        'Localidad: ' + val('locationName'), 'País: ' + domText($('countryBadge')),
+        'Latitud: ' + val('lat'), 'Longitud: ' + val('lon'),
+        ...(A && A.elev !== null ? ['Elevación (grilla NASA POWER): ' + Math.round(A.elev) + ' m'] : [])
+      ] },
+      { title: 'CULTIVO Y CONFIGURACIÓN DEL ANÁLISIS', rows: [
+        'Cultivo a sembrar: ' + sel('crop'), 'Cultivo anterior: ' + sel('prevCrop'), 'Prioridad: ' + sel('priority'),
+        'Promedio histórico: ' + val('climYears') + ' año(s) y ' + val('climMonths') + ' mes(es)',
+        'Período reciente: ' + sel('windowDays'),
+        'Escenario: lluvia ' + val('rainAdj') + '%, temperatura ' + val('tempAdj') + ' °C',
+        'Capa satelital NASA seleccionada: ' + (sel('gibsLayer') || 'ninguna')
+      ] }
+    ];
+    if (!A) return { inicio, analisis: [{ title: 'ANÁLISIS CLIMÁTICO NASA POWER', rows: ['No se ejecutó «Analizar parcela»: este PDF incluye solo los datos manuales.'] }] };
+    const stats = [...document.querySelectorAll('#statsGrid .stat')].map(s => domText(s.querySelector('.label')) + ': ' + domText(s.querySelector('.value')));
+    const checks = [...document.querySelectorAll('#cropChecklist .verdict-text')].map(domText);
+    const strat = [...document.querySelectorAll('#strategyGrid .strat')].flatMap(c => [
+      domText(c.querySelector('.strat-tag')) + ' - ' + domText(c.querySelector('.strat-crop')) + ': ' + domText(c.querySelector('.strat-score')),
+      '   ' + [...c.querySelectorAll('.bar')].map(b => domText(b.querySelector('span')) + ' ' + b.querySelector('i').style.width).join(' | '),
+      ...[...c.querySelectorAll('h4')].map(h => domText(h) + ': ' + [...h.nextElementSibling.children].map(domText).join(' / '))
+    ]);
+    const gaps = [...document.querySelectorAll('#gapsList li')].map(domText);
+    return { inicio, analisis: [
+      { title: 'ESTADO HÍDRICO GENERAL', rows: [domText($('dot')) + ': ' + domText($('verdictText'))] },
+      { title: 'ÚLTIMOS ' + A.windowDays + ' DÍAS VS. CLIMATOLOGÍA (' + A.spanLabel + ')', rows: stats },
+      { title: 'RECOMENDACIÓN PARA TU CULTIVO', rows: [domText($('cropDot')) + ': ' + domText($('cropVerdictText')), ...checks, domText($('rotationNote'))].filter(Boolean) },
+      { title: 'COMPARACIÓN DE ESTRATEGIAS DE ROTACIÓN', rows: [domText($('strategyNote')), ...strat].filter(Boolean) },
+      { title: 'CALENDARIO CLIMÁTICO ANUAL', rows: [domText($('annualNote'))] },
+      { title: 'QUÉ NO SABEMOS Y DÓNDE SE NECESITA CRITERIO LOCAL', rows: gaps }
+    ] };
+  }
   function buildPdf() {
     if (!report) { message.textContent = 'Primero calculá el análisis personalizado.'; return null; }
     if (!window.jspdf?.jsPDF) { message.textContent = 'No se pudo cargar jsPDF. Revisá tu conexión a Internet.';
@@ -80,7 +123,7 @@
     function line(text, options = {}) {
       const size = options.size || 10;
       doc.setFont('helvetica', options.bold ? 'bold' : 'normal'); doc.setFontSize(size);
-      const chunks = doc.splitTextToSize(String(text), maxWidth);
+      const chunks = doc.splitTextToSize(pdfText(text), maxWidth);
       const step = size * .48;
       for (const chunk of chunks) { if (y + step > bottom) nextPage(); doc.text(chunk, margin, y); y += step; }
       y += options.after ?? 2;
@@ -89,14 +132,18 @@
     line('AgroVista | Análisis personalizado de parcela', {size:16,bold:true,after:5});
     doc.setTextColor(40, 47, 48);
     line('Fecha: ' + report.date.toLocaleString('es-AR'), {after:5});
+    const app = collectApp();
+    const block = s => { line(s.title, {size:11,bold:true,after:3}); s.rows.forEach(r => line('- ' + r, {after:1.5})); y += 4; };
+    app.inicio.forEach(block);
     line('DATOS DECLARADOS POR EL AGRICULTOR', {size:11,bold:true,after:3});
     for (const [key,label] of Object.entries(labels)) if (report.fields[key]) line(label + ': ' + report.fields[key], {after:1});
     y += 5;
+    app.analisis.forEach(block);
     line('RESULTADOS DEL ANÁLISIS', {size:11,bold:true,after:4});
     report.lines.forEach((item,i) => line((i+1) + '. ' + item, {after:4}));
     y += 3;
     line('ALCANCE Y LIMITACIONES', {size:11,bold:true,after:3});
-    line('Estimaciones orientativas calculadas exclusivamente a partir de los datos manuales ingresados. No son un diagnóstico agronómico, una predicción de cosecha ni una recomendación de fertilización. No modifican los análisis climáticos de NASA POWER.', {after:3});
+    line('Los resultados del terreno se calculan solo con los datos manuales ingresados; las secciones climáticas provienen de NASA POWER y de las reglas del prototipo. Son estimaciones orientativas: no son un diagnóstico agronómico, una predicción de cosecha ni una recomendación de fertilización. Validar con un técnico local.', {after:3});
     for (let i=1;i<=doc.getNumberOfPages();i++) { doc.setPage(i); doc.setFontSize(8); doc.setTextColor(100); doc.text('AgroVista - Página '+i+' de '+doc.getNumberOfPages(), margin, 290); }
     return doc;
   }
