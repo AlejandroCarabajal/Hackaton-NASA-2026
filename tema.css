@@ -1,0 +1,141 @@
+/* =====================================================================
+   Temas de contraste de AgroNasa
+   - Oscuro: es el diseño original (styles.css). No se define nada acá.
+   - Claro y Alto contraste: redefinen las variables de color.
+   El tema elegido se guarda en el navegador (tema.js) y se aplica con
+   el atributo data-tema en <html>.
+   ===================================================================== */
+
+/* ---------- Modo claro ---------- */
+html[data-tema="claro"] {
+  --bg: #eef3ec;
+  --bg-brillo: #ffffff;
+  --panel: #ffffff;
+  --panel-2: #f6f9f4;
+  --line: #c3d2c7;
+  --soil: #7a5a3a;
+  --leaf: #1e7d45;
+  --leaf-dim: #2f6b48;
+  --amber: #9a6200;
+  --red: #b83224;
+  --text: #13221a;
+  --text-dim: #46594d;
+
+  --campo: #ffffff;
+  --texto-campo: #13221a;
+  --borde-campo: #b5c7ba;
+  --texto-etiqueta: #46594d;
+  --placeholder: #7d8f83;
+  --sobre-acento: #ffffff;
+  --resalte: rgba(30, 125, 69, 0.12);
+  --lluvia: #1f6fb0;
+  --esquema: light;
+
+  --fondo-acceso: linear-gradient(135deg, #e7f3ea, #d6ebdc);
+  --titulo-acceso: #13221a;
+  --texto-acceso: #46594d;
+  --boton-acceso: #1e7d45;
+  --boton-acceso-hover: #176638;
+
+  color-scheme: light;
+}
+
+/* ---------- Alto contraste ---------- */
+/* Negro puro, texto blanco y colores saturados: pensado para baja visión
+   o pantallas al sol. */
+html[data-tema="alto"] {
+  --bg: #000000;
+  --bg-brillo: #000000;
+  --panel: #000000;
+  --panel-2: #000000;
+  --line: #ffffff;
+  --soil: #ffcc80;
+  --leaf: #3dff8a;
+  --leaf-dim: #3dff8a;
+  --amber: #ffd400;
+  --red: #ff6b6b;
+  --text: #ffffff;
+  --text-dim: #ffffff;
+
+  --campo: #000000;
+  --texto-campo: #ffffff;
+  --borde-campo: #ffffff;
+  --texto-etiqueta: #ffffff;
+  --placeholder: #bdbdbd;
+  --sobre-acento: #000000;
+  --resalte: rgba(61, 255, 138, 0.2);
+  --lluvia: #4fc3ff;
+  --esquema: dark;
+
+  --fondo-acceso: #000000;
+  --titulo-acceso: #ffffff;
+  --texto-acceso: #ffffff;
+  --boton-acceso: #3dff8a;
+  --boton-acceso-hover: #8affb8;
+
+  color-scheme: dark;
+}
+/* Bordes más gruesos y foco bien visible */
+html[data-tema="alto"] .panel,
+html[data-tema="alto"] .stat,
+html[data-tema="alto"] .strat,
+html[data-tema="alto"] select,
+html[data-tema="alto"] input,
+html[data-tema="alto"] textarea {
+  border-width: 2px;
+}
+html[data-tema="alto"] :focus-visible {
+  outline: 3px solid var(--amber) !important;
+  outline-offset: 2px;
+}
+html[data-tema="alto"] a {
+  text-decoration: underline;
+}
+
+/* ---------- Selector de contraste (arriba a la derecha del encabezado) ---------- */
+.tema-selector {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 5;
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: rgba(12, 23, 18, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+.tema-selector button {
+  background: transparent;
+  color: #eaf2ec;
+  border: none;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.tema-selector button:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+.tema-selector button[aria-pressed="true"] {
+  background: #eaf2ec;
+  color: #0c1712;
+}
+.tema-selector button:focus-visible {
+  outline: 2px solid #ffd400;
+  outline-offset: 1px;
+}
+
+@media (max-width: 600px) {
+  .tema-selector {
+    position: static;
+    width: fit-content;
+    margin: 0 0 12px auto;
+  }
+  .tema-selector button {
+    padding: 6px 9px;
+    font-size: 11px;
+  }
+}

@@ -9,16 +9,16 @@ const cropSelect = document.getElementById('crop');
 const prevCropSelect = document.getElementById('prevCrop');
 
 const CROP_DB = {
-  maiz:     { label: 'Maíz',            family: 'graminea',      gwetRange: [0.40, 0.70], tempRange: [18, 27] },
+  maiz:     { label: 'Maíz',            family: 'graminea',      gwetRange: [0.40, 0.70], tempRange: [16, 32] }, // maíz, soja, alfalfa y sorgo: [siembra mín., óptimo máx.] (ver CROP_AG en analisis.js)
   arroz:    { label: 'Arroz',           family: 'graminea',      gwetRange: [0.70, 1.00], tempRange: [22, 32] },
   trigo:    { label: 'Trigo',           family: 'graminea',      gwetRange: [0.30, 0.60], tempRange: [12, 24] },
   cebada:   { label: 'Cebada',          family: 'graminea',      gwetRange: [0.25, 0.50], tempRange: [10, 20] },
   avena:    { label: 'Avena',           family: 'graminea',      gwetRange: [0.30, 0.55], tempRange: [10, 20] },
-  sorgo:    { label: 'Sorgo',           family: 'graminea',      gwetRange: [0.30, 0.55], tempRange: [20, 30] },
+  sorgo:    { label: 'Sorgo',           family: 'graminea',      gwetRange: [0.30, 0.55], tempRange: [18, 32] },
   mijo:     { label: 'Mijo',            family: 'graminea',      gwetRange: [0.30, 0.50], tempRange: [25, 35] },
   cana:     { label: 'Caña de azúcar',  family: 'graminea',      gwetRange: [0.60, 0.85], tempRange: [22, 32] },
-  soja:     { label: 'Soja',            family: 'leguminosa',    gwetRange: [0.40, 0.70], tempRange: [20, 30] },
-  girasol:  { label: 'Girasol',         family: 'asteracea',     gwetRange: [0.25, 0.55], tempRange: [18, 27] },
+  soja:     { label: 'Soja',            family: 'leguminosa',    gwetRange: [0.40, 0.70], tempRange: [15, 30] },
+  girasol:  { label: 'Girasol',         family: 'asteraceae',    gwetRange: [0.25, 0.55], tempRange: [18, 27] },
   mani:     { label: 'Maní',            family: 'leguminosa',    gwetRange: [0.35, 0.65], tempRange: [22, 30] },
   algodon:  { label: 'Algodón',         family: 'malvaceae',     gwetRange: [0.40, 0.65], tempRange: [25, 35] },
   palma:    { label: 'Palma aceitera',  family: 'arecaceae',     gwetRange: [0.50, 0.80], tempRange: [26, 32] },
@@ -27,7 +27,7 @@ const CROP_DB = {
   poroto:   { label: 'Poroto',          family: 'leguminosa',    gwetRange: [0.40, 0.65], tempRange: [18, 25] },
   lenteja:  { label: 'Lenteja',         family: 'leguminosa',    gwetRange: [0.30, 0.50], tempRange: [15, 22] },
   garbanzo: { label: 'Garbanzo',        family: 'leguminosa',    gwetRange: [0.30, 0.50], tempRange: [15, 25] },
-  alfalfa:  { label: 'Alfalfa',         family: 'leguminosa',    gwetRange: [0.35, 0.65], tempRange: [15, 25] },
+  alfalfa:  { label: 'Alfalfa',         family: 'leguminosa',    gwetRange: [0.35, 0.65], tempRange: [15, 30] },
   papa:     { label: 'Papa',            family: 'solanacea',     gwetRange: [0.50, 0.75], tempRange: [15, 20] },
   yuca:     { label: 'Yuca / Mandioca', family: 'euphorbiaceae', gwetRange: [0.40, 0.70], tempRange: [22, 29] },
   camote:   { label: 'Camote',          family: 'convolvulaceae',gwetRange: [0.40, 0.65], tempRange: [20, 30] },
@@ -114,7 +114,7 @@ document.getElementById('crop').addEventListener('change', updateCropCycle);
 startDateInput.addEventListener('input', updateCropCycle);
 
 const FAMILY_LABEL = {
-  graminea: 'gramínea', leguminosa: 'leguminosa', asteracea: 'asterácea',
+  graminea: 'gramínea', leguminosa: 'leguminosa', asteraceae: 'asterácea',
   solanacea: 'solanácea', malvaceae: 'malvácea', alliaceae: 'aliácea',
   apiaceae: 'apiácea', cucurbitaceae: 'cucurbitácea', rubiaceae: 'rubiácea',
   musaceae: 'musácea', vitaceae: 'vitácea', oleaceae: 'oleácea',
@@ -365,12 +365,23 @@ function setMarker(lat, lng){
   updateCoords(lat, lng);
 }
 
+// Nominatim permite como máximo 1 consulta por segundo: se espera a que el
+// usuario deje de mover el punto y se cancela la consulta anterior si sigue pendiente.
+const GEOCODE_DELAY_MS = 1000;
+let geocodeTimer = null;
+let geocodeController = null;
+
 function updateCoords(lat, lng){
   latInput.value = lat.toFixed(4);
   lonInput.value = lng.toFixed(4);
   document.getElementById('terrenoPanel').style.display = 'none';
-  detectCountry(lat, lng);
-  updateBaseImageDate(lat, lng);
+  if(typeof invalidateAnalysis === 'function') invalidateAnalysis();
+  document.getElementById('countryBadge').textContent = 'Detectando ubicación…';
+  clearTimeout(geocodeTimer);
+  geocodeTimer = setTimeout(() => {
+    detectCountry(lat, lng);
+    updateBaseImageDate(lat, lng);
+  }, GEOCODE_DELAY_MS);
 }
 
 // Fecha de captura de la imagen base (Esri World Imagery) en el punto elegido.
@@ -404,9 +415,17 @@ async function updateBaseImageDate(lat, lng){
 }));
 
 async function detectCountry(lat, lng){
+  if(geocodeController) geocodeController.abort();
+  geocodeController = new AbortController();
+  const badge = document.getElementById('countryBadge');
   try {
-    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=es`);
+    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=es`, { signal: geocodeController.signal });
+    if(!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
+    if(!data.address){
+      badge.textContent = 'Sin país detectado (¿océano?)';
+      return;
+    }
     const countryCode = (data.address.country_code || '').toUpperCase();
     const countryName = data.address.country || 'Desconocido';
 
@@ -420,17 +439,31 @@ async function detectCountry(lat, lng){
     const displayName = detail ? `${detail}, ${countryName}` : countryName;
     locationNameInput.value = displayName;
 
-    const badge = document.getElementById('countryBadge');
-    badge.innerHTML = `<span class="country-flag"></span> ${countryName}${detail ? ' — ' + detail : ''} (${countryCode})`;
+    // textContent: el texto viene de un servicio externo y no se interpreta como HTML
+    badge.textContent = `${countryName}${detail ? ' — ' + detail : ''} (${countryCode})`;
 
     if(countryCode !== currentCountryCode){
       currentCountryCode = countryCode;
       loadCropsForCountry(countryCode);
     }
   } catch(err){
-    document.getElementById('countryBadge').textContent = 'No se pudo detectar el país';
+    if(err.name === 'AbortError') return;          // la reemplazó una consulta más nueva
+    badge.textContent = 'No se pudo detectar el país';
   }
 }
+
+// Coordenadas escritas a mano: mueven el marcador y vuelven a detectar el país
+function onManualCoords(){
+  const lat = parseFloat(latInput.value), lon = parseFloat(lonInput.value);
+  if(isNaN(lat) || isNaN(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180){
+    statusEl.textContent = 'Coordenadas fuera de rango (latitud −90 a 90, longitud −180 a 180).';
+    return;
+  }
+  map.setView([lat, lon], Math.max(map.getZoom(), 8));
+  setMarker(lat, lon);
+}
+latInput.addEventListener('change', onManualCoords);
+lonInput.addEventListener('change', onManualCoords);
 
 function loadCropsForCountry(countryCode){
   const cropKeys = COUNTRY_CROPS[countryCode] || [];
@@ -460,11 +493,14 @@ function loadCropsForCountry(countryCode){
 
 async function searchLocation(){
   const query = searchInput.value.trim();
-  if(!query) return;
+  const searchStatus = document.getElementById('searchStatus');
+  if(!query){ searchStatus.textContent = 'Escribí una ciudad, región o parcela.'; return; }
   searchBtn.disabled = true;
   searchBtn.textContent = 'Buscando...';
+  searchStatus.textContent = '';
   try {
     const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1&accept-language=es`);
+    if(!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
     if(data.length > 0){
       const lat = parseFloat(data[0].lat);
@@ -472,10 +508,10 @@ async function searchLocation(){
       map.setView([lat, lon], 13);
       setMarker(lat, lon);
     } else {
-      alert('No se encontró la ubicación. Intentá con otro nombre.');
+      searchStatus.textContent = 'No se encontró la ubicación. Intentá con otro nombre.';
     }
   } catch(err){
-    alert('Error al buscar. Verificá tu conexión.');
+    searchStatus.textContent = 'Error al buscar. Verificá tu conexión e intentá de nuevo.';
   } finally {
     searchBtn.disabled = false;
     searchBtn.textContent = 'Buscar';
@@ -772,11 +808,32 @@ function sum(obj){
   return Object.values(obj).filter(v => v > -900).reduce((a,b)=>a+b,0);
 }
 
+// Ancho en píxeles para dibujar un gráfico: el ancho interno de los paneles.
+// Se calcula desde .wrap porque el panel puede estar oculto (ancho 0) al momento de dibujar.
+// Mínimo 600 px: en celulares el gráfico conserva el desplazamiento horizontal.
+const PANEL_INNER_OFFSET = 42;   // 20 px de padding + 1 px de borde, a cada lado
+function chartWidth(){
+  const wrap = document.querySelector('.wrap');
+  const inner = wrap ? wrap.clientWidth - PANEL_INNER_OFFSET : 800;
+  return Math.max(600, Math.round(inner));
+}
+// Color de una variable CSS del tema actual (los gráficos SVG se dibujan con estos colores)
+function cssVar(name, fallback){
+  const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  return v || fallback;
+}
+function sizeChart(svg, w, h){
+  svg.setAttribute('width', w);
+  svg.setAttribute('height', h);
+  svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+}
+
 function drawChart(precipObj){
   const svg = document.getElementById('chart');
   svg.innerHTML = '';
   const entries = Object.entries(precipObj);
-  const w = 800, h = 220, padL = 34, padB = 26, padT = 10;
+  const w = chartWidth(), h = 220, padL = 34, padB = 26, padT = 10;
+  sizeChart(svg, w, h);
   const max = Math.max(1, ...entries.map(e => e[1]));
   const barW = (w - padL - 10) / entries.length;
 
@@ -791,7 +848,7 @@ function drawChart(precipObj){
     rect.setAttribute('width', Math.max(barW - 6, 2));
     rect.setAttribute('height', Math.max(bh, 1));
     rect.setAttribute('rx', 2);
-    rect.setAttribute('fill', val > 0 ? '#5fd48a' : '#24392e');
+    rect.setAttribute('fill', val > 0 ? cssVar('--leaf', '#5fd48a') : cssVar('--line', '#24392e'));
     svg.appendChild(rect);
 
     if(i % 2 === 0){
@@ -808,7 +865,7 @@ function drawChart(precipObj){
   const axis = document.createElementNS(ns, 'line');
   axis.setAttribute('x1', padL); axis.setAttribute('x2', w-4);
   axis.setAttribute('y1', h-padB); axis.setAttribute('y2', h-padB);
-  axis.setAttribute('stroke', '#24392e');
+  axis.setAttribute('stroke', cssVar('--line', '#24392e'));
   svg.appendChild(axis);
 }
 
