@@ -2,3 +2,7 @@
 
 /* Extensión administrativa */
 .indicadores{grid-template-columns:repeat(3,minmax(0,1fr))}.balance{padding:16px;border:1px solid #376247;background:#0c2016;border-radius:9px;line-height:1.7;color:#d8f1df;margin:14px 0}.tabla-scroll table{min-width:780px}.pestana:focus-visible,button:focus-visible,a:focus-visible{outline:2px solid #a3f0b7;outline-offset:3px}@media(max-width:800px){.indicadores{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:520px){.indicadores{grid-template-columns:1fr}}
+.msg-form{margin:0;padding:10px 14px;border-radius:10px;font-weight:600}
+.msg-form:empty{display:none}
+.msg-form[data-tipo="error"]{color:#ffd6d6;background:rgba(224,82,82,.15);border:1px solid #e05252}
+.msg-form[data-tipo="ok"]{color:#b8f5c8;background:rgba(61,214,120,.15);border:1px solid #3dd678}

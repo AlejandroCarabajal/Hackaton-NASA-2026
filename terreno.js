@@ -139,17 +139,23 @@ document.addEventListener('agrovista:analisis-listo', actualizarBotones);
     let d;
     try { d = JSON.parse(localStorage.getItem('agrovista_gestion_v1')); } catch (e) { return []; }
     if (!d || !Array.isArray(d.maquinas) || !Array.isArray(d.servicios) || !Array.isArray(d.gastos)) return [];
-    if (!d.maquinas.length && !d.servicios.length && !d.gastos.length) return [];
-    const money = n => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(Number(n) || 0);
+    const arr = k => Array.isArray(d[k]) ? d[k] : [];
+    const trabajos = arr('trabajos'), combustible = arr('combustible'), fijos = arr('fijos');
+    if (![d.maquinas, d.servicios, d.gastos, trabajos, combustible, fijos].some(a => a.length)) return [];
+    const num = n => Number(n) || 0;
+    const suma = (a, k) => a.reduce((t, x) => t + num(x[k]), 0);
+    const money = n => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(num(n));
+    const fmtN = (n, dec) => num(n).toLocaleString('es-AR', { maximumFractionDigits: dec });
     const fecha = f => String(f || '').split('-').reverse().join('/') || 's/f';
-    const filas = (arr, fn, n) => {
-      const rows = arr.slice(0, 40).map(fn);
-      if (arr.length > 40) rows.push(['... y ' + (arr.length - 40) + ' más', ...Array(n - 1).fill('')]);
+    const filas = (a, fn, n) => {
+      const rows = a.slice(0, 40).map(fn);
+      if (a.length > 40) rows.push(['... y ' + (a.length - 40) + ' más', ...Array(n - 1).fill('')]);
       return rows;
     };
     const nombreMaq = id => (d.maquinas.find(m => m.id === id) || {}).nombre || 'Máquina eliminada';
-    const totalG = d.gastos.reduce((a, g) => a + (Number(g.importe) || 0), 0);
-    const totalS = d.servicios.reduce((a, s) => a + (Number(s.costo) || 0), 0);
+    const compras = suma(combustible.filter(c => c.tipo === 'Ingreso'), 'importe');
+    const totalG = suma(d.gastos, 'importe'), totalS = suma(d.servicios, 'costo'), totalF = suma(fijos, 'importe'), totalT = suma(trabajos, 'costo');
+    const litros = combustible.reduce((t, c) => t + (c.tipo === 'Ajuste negativo' ? -num(c.litros) : num(c.litros)), 0) - suma(trabajos, 'litros');
     return [
       { title: 'GESTIÓN AGRÍCOLA - RESUMEN', rows: [
         ['Máquinas registradas', d.maquinas.length],
@@ -157,14 +163,25 @@ document.addEventListener('agrovista:analisis-listo', actualizarBotones);
         ['Servicios registrados', d.servicios.length],
         ['Gastos generales', money(totalG)],
         ['Costos de mantenimiento', money(totalS)],
-        ['Total de costos registrados', money(totalG + totalS)]
+        ['Compras de combustible', money(compras)],
+        ['Gastos fijos', money(totalF)],
+        ['Costo de trabajos', money(totalT)],
+        ['Total de costos registrados', money(totalG + totalS + compras + totalF + totalT)],
+        ['Combustible disponible', fmtN(litros, 2) + ' L'],
+        ['Horas trabajadas', fmtN(suma(trabajos, 'horas'), 1) + ' h']
       ] },
       { title: 'GESTIÓN AGRÍCOLA - MAQUINARIA', rows: [], table: { head: ['Máquina', 'Tipo', 'Marca / modelo', 'Año', 'Estado', 'Notas'], widths: [34, 24, 32, 12, 24, 48],
         body: filas(d.maquinas, m => [m.nombre, m.tipo, [m.marca, m.modelo].filter(Boolean).join(' / ') || '-', m.anio || '-', m.estado, m.notas || '-'], 6) } },
       { title: 'GESTIÓN AGRÍCOLA - MANTENIMIENTOS', rows: [], table: { head: ['Máquina', 'Trabajo', 'Fecha', 'Estado', 'Costo', 'Detalle'], widths: [34, 30, 20, 20, 28, 42],
         body: filas(d.servicios, s => [nombreMaq(s.maquina), s.tipo, fecha(s.fecha), s.estado, money(s.costo), s.detalle || '-'], 6) } },
       { title: 'GESTIÓN AGRÍCOLA - GASTOS', rows: [], table: { head: ['Fecha', 'Categoría', 'Parcela', 'Descripción', 'Importe'], widths: [20, 28, 32, 60, 34],
-        body: filas(d.gastos, g => [fecha(g.fecha), g.categoria, g.parcela || 'sin parcela', g.detalle || '-', money(g.importe)], 5) } }
+        body: filas(d.gastos, g => [fecha(g.fecha), g.categoria, g.parcela || 'sin parcela', g.detalle || '-', money(g.importe)], 5) } },
+      { title: 'GESTIÓN AGRÍCOLA - TRABAJOS', rows: [], table: { head: ['Fecha', 'Máquina', 'Parcela / tarea', 'Horas / km', 'Ha', 'Litros', 'Costo'], widths: [20, 30, 40, 24, 12, 18, 30],
+        body: filas(trabajos, t => [fecha(t.fecha), nombreMaq(t.maquina), (t.parcela || '-') + ' / ' + (t.tarea || '-'), fmtN(t.horas, 1) + ' h / ' + fmtN(t.km, 1) + ' km', fmtN(t.ha, 2), fmtN(t.litros, 2) + ' L', money(t.costo)], 7) } },
+      { title: 'GESTIÓN AGRÍCOLA - COMBUSTIBLE', rows: [], table: { head: ['Fecha', 'Tipo', 'Litros', 'Importe', 'Detalle'], widths: [22, 32, 22, 34, 64],
+        body: filas(combustible, c => [fecha(c.fecha), c.tipo || '-', fmtN(c.litros, 2) + ' L', money(c.importe), c.detalle || '-'], 5) } },
+      { title: 'GESTIÓN AGRÍCOLA - GASTOS FIJOS', rows: [], table: { head: ['Mes', 'Categoría', 'Detalle', 'Importe'], widths: [22, 40, 76, 36],
+        body: filas(fijos, f => [String(f.mes || '-').split('-').reverse().join('/'), f.categoria || '-', f.detalle || '-', money(f.importe)], 4) } }
     ];
   }
   async function satelliteImage() {
@@ -257,6 +274,7 @@ const informe = report || {
     line('Fecha: ' + informe.date.toLocaleString('es-AR', { hourCycle: 'h23' }), {after:5});
     const app = collectApp();
     const block = s => {
+      if (y + 30 > bottom) nextPage();
       line(s.title, {size:11,bold:true,after:3});
       const rows = s.rows || [];
       if (rows.length && rows.every(Array.isArray)) { table(['Dato', 'Valor'], rows, [62, 112]); y += 3; }
