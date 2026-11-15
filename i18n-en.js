@@ -35,7 +35,7 @@ window.I18N_EN = {
  "No sé / barbecho": "Don't know / fallow",
  "Duración del cultivo": "Crop duration",
  "Fecha de inicio": "Start date",
- "Fecha de finalización (dd/mm/yyyy)": "End date (dd/mm/yyyy)",
+ "Fecha de finalización (dd/mm/yyyy)": "End date (yyyy-mm-dd)",
  "FAO Crop Calendar + base de datos agronómica de referencia. Duraciones típicas orientativas; varían según variedad, clima y manejo.": "FAO Crop Calendar + reference agronomic database. Typical durations are approximate; they vary with variety, climate and management.",
  "03 — Prioridades y escenario": "03 — Priorities and scenario",
  "¿Qué priorizás?": "What do you prioritize?",

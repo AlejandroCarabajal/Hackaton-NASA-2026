@@ -263,6 +263,25 @@
   window.confirm = m => confirmar(traducir(String(m)));
   window.alert = m => avisar(traducir(String(m)));
 
+  /* ---------- campos de fecha ---------- */
+  // El selector de fecha nativo muestra el formato del navegador y no se puede cambiar desde la página.
+  // En inglés se usa un campo de texto con formato yyyy-mm-dd (el valor interno es el mismo: ISO).
+  function camposFecha(){
+    document.querySelectorAll('input[type="date"], input[data-i18n-fecha]').forEach(el => {
+      if(idioma === 'en' && el.type === 'date'){
+        el.setAttribute('data-i18n-fecha', '');
+        el.type = 'text';
+        el.placeholder = 'yyyy-mm-dd'; el.maxLength = 10; el.inputMode = 'numeric';
+        el.setAttribute('pattern', '\\d{4}-\\d{2}-\\d{2}'); el.title = 'yyyy-mm-dd';
+      } else if(idioma === 'es' && el.hasAttribute('data-i18n-fecha')){
+        el.removeAttribute('data-i18n-fecha');
+        el.type = 'date';
+        el.removeAttribute('placeholder'); el.removeAttribute('maxlength'); el.removeAttribute('inputmode');
+        el.removeAttribute('pattern'); el.removeAttribute('title');
+      }
+    });
+  }
+
   /* ---------- botón ES / EN ---------- */
   const estilo = '.idioma-selector{display:inline-flex;gap:4px;margin-left:6px;padding-left:8px;border-left:1px solid rgba(255,255,255,.25)}' +
     'html[data-tema="claro"] .idioma-selector{border-left-color:rgba(0,0,0,.25)}';
@@ -302,6 +321,7 @@
     try { localStorage.setItem(CLAVE, idioma); } catch(e){ /* sin almacenamiento */ }
     cache.clear();
     document.documentElement.lang = idioma;
+    camposFecha();
     recorrer(document.documentElement);
     marcarBotones();
     if(cambio){
@@ -323,6 +343,7 @@
   observar();
   document.addEventListener('DOMContentLoaded', () => {
     crearBotones();
+    camposFecha();
     recorrer(document.documentElement);
   });
 })();

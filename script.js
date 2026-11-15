@@ -69,6 +69,9 @@ const CROP_CYCLE_DAYS = {
 
 function pad2(n){ return String(n).padStart(2, '0'); }
 
+const enIngles = () => !!window.AgroI18n && AgroI18n.idioma() === 'en';
+const tI = (es, ...a) => (window.AgroI18n ? AgroI18n.t(es, ...a) : es.replace(/\{(\d+)\}/g, (x, i) => a[i]));
+
 function cropCycleInfo(){
   const key = document.getElementById('crop').value;
   const days = CROP_CYCLE_DAYS[key];
@@ -76,18 +79,20 @@ function cropCycleInfo(){
   let duration = '—', end = '—';
   if(key && CROP_DB[key]){
     if(days){
-      duration = `${days} días (~${Math.round(days / 30)} meses)`;
+      duration = tI('{0} días (~{1} meses)', days, Math.round(days / 30));
       const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(start);
       if(m){
         const d = new Date(+m[1], +m[2] - 1, +m[3] + days);
-        end = `${pad2(d.getDate())}/${pad2(d.getMonth() + 1)}/${d.getFullYear()}`;
+        end = enIngles()
+          ? `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`
+          : `${pad2(d.getDate())}/${pad2(d.getMonth() + 1)}/${d.getFullYear()}`;
       }
     } else {
-      duration = 'Cultivo perenne (sin ciclo anual)';
-      end = 'No aplica';
+      duration = tI('Cultivo perenne (sin ciclo anual)');
+      end = tI('No aplica');
     }
   }
-  return { duration, end, start: start ? start.split('-').reverse().join('/') : '' };
+  return { duration, end, start: start ? (enIngles() ? start : start.split('-').reverse().join('/')) : '' };
 }
 
 function updateCropCycle(){
@@ -95,6 +100,7 @@ function updateCropCycle(){
   document.getElementById('cropDuration').value = info.duration;
   document.getElementById('endDate').value = info.end;
 }
+document.addEventListener('agronasa:idioma', () => updateCropCycle());
 function todayISO(){
   const t = new Date();
   return `${t.getFullYear()}-${pad2(t.getMonth() + 1)}-${pad2(t.getDate())}`;
@@ -106,7 +112,7 @@ startDateInput.value = todayISO();   // por defecto, la fecha de hoy
 // Si se borra el campo o se escribe/pega una fecha anterior a hoy, vuelve a hoy.
 startDateInput.addEventListener('change', () => {
   startDateInput.min = todayISO();
-  if(!startDateInput.value || startDateInput.value < startDateInput.min){
+  if(!startDateInput.value || isNaN(Date.parse(startDateInput.value)) || startDateInput.value < startDateInput.min){
     startDateInput.value = startDateInput.min;
     updateCropCycle();
   }

@@ -105,7 +105,7 @@ document.addEventListener('agrovista:analisis-listo', actualizarBotones);
       { title: 'CULTIVO Y CONFIGURACIÓN DEL ANÁLISIS', rows: [
         ['Cultivo a sembrar', sel('crop')],
         ['Duración del cultivo', val('cropDuration')],
-        ['Fecha de inicio', val('startDate').split('-').reverse().join('/') || 'no indicada'],
+        ['Fecha de inicio', (window.AgroI18n && AgroI18n.idioma() === 'en' ? val('startDate') : val('startDate').split('-').reverse().join('/')) || 'no indicada'],
         ['Fecha de finalización', val('startDate') || val('endDate') === 'No aplica' ? val('endDate') : 'no calculada (falta fecha de inicio)'],
         ['Cultivo anterior', sel('prevCrop')], ['Prioridad', sel('priority')],
         ['Promedio histórico', val('climYears') + ' año(s) y ' + val('climMonths') + ' mes(es)'],
