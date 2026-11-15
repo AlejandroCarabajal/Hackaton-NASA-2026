@@ -324,3 +324,83 @@
     };
   }
 })();
+
+/* PANEL DE ACCESIBILIDAD - TAMAÑO DEL TEXTO */
+
+(() => {
+  const boton = document.getElementById("botonAccesibilidad");
+  const panel = document.getElementById("panelAccesibilidad");
+  const disminuir = document.getElementById("disminuirTexto");
+  const aumentar = document.getElementById("aumentarTexto");
+  const porcentaje = document.getElementById("porcentajeTexto");
+  const restablecer = document.getElementById("restablecerAccesibilidad");
+  const contenido = document.querySelector(".wrap");
+
+  if (
+    !boton || !panel || !disminuir || !aumentar ||
+    !porcentaje || !restablecer || !contenido
+  ) return;
+
+  const clave = "agronasa-tamano-texto";
+
+  let tamano = 100;
+
+  try {
+    const guardado = Number(localStorage.getItem(clave));
+    if (guardado >= 80 && guardado <= 200) {
+      tamano = Math.round(guardado / 10) * 10;
+    }
+  } catch (error) {
+    console.warn("No se pudo leer el tamaño guardado", error);
+  }
+
+  function aplicarTamano() {
+    contenido.style.zoom = `${tamano}%`;
+
+    porcentaje.textContent = `${tamano}%`;
+    disminuir.disabled = tamano <= 80;
+    aumentar.disabled = tamano >= 200;
+
+    try {
+      localStorage.setItem(clave, String(tamano));
+    } catch (error) {
+      console.warn("No se pudo guardar el tamaño", error);
+    }
+
+    if (typeof map !== "undefined" && map) {
+      setTimeout(() => map.invalidateSize(), 100);
+    }
+  }
+
+  boton.addEventListener("click", () => {
+    panel.hidden = !panel.hidden;
+    boton.setAttribute("aria-expanded", String(!panel.hidden));
+  });
+
+  disminuir.addEventListener("click", () => {
+    tamano = Math.max(80, tamano - 10);
+    aplicarTamano();
+  });
+
+  aumentar.addEventListener("click", () => {
+    tamano = Math.min(200, tamano + 10);
+    aplicarTamano();
+  });
+
+  restablecer.addEventListener("click", () => {
+    tamano = 100;
+    aplicarTamano();
+  });
+
+  document.addEventListener("keydown", (evento) => {
+    if (evento.key === "Escape" && !panel.hidden) {
+      panel.hidden = true;
+      boton.setAttribute("aria-expanded", "false");
+      boton.focus();
+    }
+  });
+
+  aplicarTamano();
+})();
+
+

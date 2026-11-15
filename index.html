@@ -211,7 +211,8 @@
       <details class="source-box">
         <summary>Fuente</summary>
         <div class="source-box-body">NASA POWER (precipitación, temperatura, humedad) comparado con la climatología de
-          <span class="clim-span">10 años</span></div>
+          <span class="clim-span">10 años</span>
+        </div>
       </details>
     </div>
 
@@ -441,6 +442,43 @@
         https.</p>
     </div>
   </aside>
+
+
+  <button type="button" id="botonAccesibilidad" class="boton-accesibilidad" aria-label="Abrir opciones de accesibilidad"
+    aria-controls="panelAccesibilidad" aria-expanded="false" title="Accesibilidad">
+    <span aria-hidden="true">👁</span>
+  </button>
+
+
+  <div id="panelAccesibilidad" class="panel-accesibilidad" aria-label="Opciones de accesibilidad" hidden>
+    <h2>Accesibilidad</h2>
+
+    <div class="accesibilidad-linea"></div>
+
+    <p>Tamaño del texto</p>
+
+    <div class="controles-texto">
+      <button type="button" id="disminuirTexto" aria-label="Disminuir texto">
+        −
+      </button>
+
+      <span id="porcentajeTexto" aria-live="polite">100%</span>
+
+      <button type="button" id="aumentarTexto" aria-label="Aumentar texto">
+        +
+      </button>
+    </div>
+
+    <p class="accesibilidad-limites">
+      Mínimo 80% · Máximo 200%
+    </p>
+
+    <button type="button" id="restablecerAccesibilidad" class="restablecer-accesibilidad">
+      Restablecer tamaño
+    </button>
+  </div>
+
+
 
 
   <button type="button" id="botonVolverArriba" class="boton-volver-arriba" aria-label="Volver al inicio de la página"
