@@ -102,11 +102,12 @@ function todayISO(){
 
 const startDateInput = document.getElementById('startDate');
 startDateInput.min = todayISO();
-// Si se escribe o pega una fecha anterior a hoy, se descarta.
+startDateInput.value = todayISO();   // por defecto, la fecha de hoy
+// Si se borra el campo o se escribe/pega una fecha anterior a hoy, vuelve a hoy.
 startDateInput.addEventListener('change', () => {
   startDateInput.min = todayISO();
-  if(startDateInput.value && startDateInput.value < startDateInput.min){
-    startDateInput.value = '';
+  if(!startDateInput.value || startDateInput.value < startDateInput.min){
+    startDateInput.value = startDateInput.min;
     updateCropCycle();
   }
 });
