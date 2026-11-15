@@ -16,6 +16,7 @@
 }
 .header-accesible {
   grid-area: accesible;
+  justify-self: end;          /* "Usar con la voz" al margen derecho del encabezado */
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -320,3 +321,61 @@ body.asistente-abierto .asistente-flotante {
   }
 }
 
+
+/* ---------- Controles del encabezado: contraste y, debajo, el sello ---------- */
+.header-controles {
+  position: absolute;
+  top: 18px;
+  right: 24px;                /* mismo margen derecho que el botón "Usar con la voz" */
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+.header-controles .tema-selector {
+  position: static;
+}
+.header-controles .sello-accesible {
+  font-size: 12px;
+}
+/* Pantallas medianas: el bloque va en su propia línea, arriba, para no tapar el título */
+@media (max-width: 1300px) {
+  .header-controles {
+    position: static;
+    flex-direction: column;
+    align-items: flex-end;
+    margin-bottom: 12px;
+  }
+}
+@media (max-width: 600px) {
+  .header-controles {
+    position: static;
+    flex-direction: column;
+    align-items: flex-end;
+    margin-bottom: 12px;
+  }
+  .header-controles .tema-selector {
+    margin: 0;
+  }
+  .header-controles .sello-accesible {
+    font-size: 11px;
+  }
+}
+
+/* Con el panel del asistente abierto, el encabezado se angosta 450 px: mismo arreglo */
+@media (min-width: 1100px) and (max-width: 1750px) {
+  body.asistente-abierto .header-controles {
+    position: static;
+    flex-direction: column;
+    align-items: flex-end;
+    margin-bottom: 12px;
+  }
+}
+
+/* Celular: conversación, botón "Hablar" y botón de voz (reglas que se habían perdido) */
+@media (max-width: 600px) {
+  .asistente-log p { max-width: 100%; }
+  #asistenteHablar { width: 100%; }
+  .asistente-flotante { right: 14px; bottom: 14px; width: 60px; height: 60px; font-size: 26px; }
+}

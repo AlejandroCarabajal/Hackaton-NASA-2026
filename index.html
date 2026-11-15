@@ -19,18 +19,20 @@
   <a class="saltar" href="#contenido">Saltar al contenido</a>
 
   <header>
-    <div class="tema-selector" role="group" aria-label="Contraste de la pantalla">
-      <button type="button" data-tema-opcion="oscuro" aria-pressed="true">Oscuro</button>
-      <button type="button" data-tema-opcion="claro" aria-pressed="false">Claro</button>
-      <button type="button" data-tema-opcion="alto" aria-pressed="false">Alto contraste</button>
+    <div class="header-controles">
+      <div class="tema-selector" role="group" aria-label="Contraste de la pantalla">
+        <button type="button" data-tema-opcion="oscuro" aria-pressed="true">Oscuro</button>
+        <button type="button" data-tema-opcion="claro" aria-pressed="false">Claro</button>
+        <button type="button" data-tema-opcion="alto" aria-pressed="false">Alto contraste</button>
+      </div>
+      <p class="sello-accesible"><span aria-hidden="true">♿</span> Accesible <span aria-hidden="true">·</span>
+        <span aria-hidden="true">🎙</span> Con asistente por voz</p>
     </div>
     <div class="header-inner">
       <img class="logo" src="imagenes/logo_nasa_agri_2.png" alt="Logo de AgroNasa">
       <div class="eyebrow"><b>NASA Space Apps Challenge · Prototipo</b> </div>
       <h1>AgroNasa</h1>
       <div class="header-accesible">
-        <p class="sello-accesible"><span aria-hidden="true">♿</span> Accesible <span aria-hidden="true">·</span> <span
-            aria-hidden="true">🎙</span> Con asistente por voz</p>
         <button type="button" id="asistenteAbrirHeader" class="boton-voz-header" aria-controls="asistente">🎙 Usar con
           la voz</button>
       </div>
