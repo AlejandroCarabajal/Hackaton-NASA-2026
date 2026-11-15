@@ -362,12 +362,24 @@ document.addEventListener('click', e => {
   setStratOpen(card, open);
 });
 
+// El detalle se muestra en un panel horizontal debajo de todas las tarjetas.
+// El texto original queda oculto dentro de cada tarjeta (lo usa el PDF).
 function setStratOpen(card, open){
   const btn = card.querySelector('.strat-toggle');
+  const panel = document.getElementById('stratDetail');
   card.classList.toggle('strat-open', open);
-  card.querySelector('.strat-more').hidden = !open;
   btn.setAttribute('aria-expanded', String(open));
   btn.textContent = open ? 'Ver menos' : 'Ver más';
+  if(open){
+    const title = card.querySelector('.strat-tag').textContent + ' — ' + card.querySelector('.strat-crop').textContent;
+    panel.innerHTML = '<div class="strat-detail-title"></div><div class="strat-detail-cols"></div>';
+    panel.firstChild.textContent = title;
+    panel.lastChild.innerHTML = card.querySelector('.strat-more').innerHTML;
+    panel.hidden = false;
+  } else {
+    panel.hidden = true;
+    panel.innerHTML = '';
+  }
 }
 
 function renderStrategies(A, adj, sc){
@@ -404,6 +416,8 @@ function renderStrategies(A, adj, sc){
   const noPrev = known ? '' : ' No informaste cultivo anterior: la rotación se puntúa como neutra.';
   document.getElementById('strategyNote').textContent =
     'Prioridad aplicada: ' + document.getElementById('priority').selectedOptions[0].textContent + '.' + noPrev;
+  document.getElementById('stratDetail').hidden = true;
+  document.getElementById('stratDetail').innerHTML = '';
   document.getElementById('strategyGrid').innerHTML = picks.map(p => buildStrategyCard(p.title, p.key, p.prev, A, adj, sc, p.main)).join('');
 }
 
