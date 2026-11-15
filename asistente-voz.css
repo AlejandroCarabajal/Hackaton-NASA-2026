@@ -389,11 +389,30 @@ body.asistente-abierto .asistente-flotante {
     width: 56px;
     height: 56px;
   }
-  .boton-accesibilidad { right: 150px; }
-  .asistente-flotante  { right: 82px; }
-  .boton-volver-arriba { right: 14px; }
+  /* Sin "volver arriba": los dos botones se reparten en mitades */
+  .boton-accesibilidad { right: auto; left: calc(25% - 28px); transition: left .25s ease; }
+  .asistente-flotante  { right: auto; left: calc(75% - 28px); transition: left .25s ease; }
+  .boton-volver-arriba { right: auto; left: calc(100% * 5 / 6 - 28px); }
+  /* Con "volver arriba" visible: los tres se reparten en tercios */
+  body:has(.boton-volver-arriba:not([hidden])) .boton-accesibilidad { left: calc(100% / 6 - 28px); }
+  body:has(.boton-volver-arriba:not([hidden])) .asistente-flotante  { left: calc(50% - 28px); }
   .panel-accesibilidad {
     bottom: 82px;
     max-height: calc(100dvh - 100px);
+  }
+  body {
+    padding-bottom: 96px;
+  }
+  body::after {
+    content: "";
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 84px;
+    background: var(--bg);
+    border-top: 1px solid rgba(128, 128, 128, 0.3);
+    z-index: 850;
+    pointer-events: none;
   }
 }
