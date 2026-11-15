@@ -338,15 +338,36 @@ function buildStrategyCard(title, key, prevKey, A, adj, sc, highlight){
     <div class="strat-head">
       <span class="strat-tag">${title}</span>
       <div class="strat-crop">${c.label}</div>
-      <div class="strat-score">${pct(s.total)}<small>/100</small></div>
+      <div class="strat-score">${pct(s.total)}%</div>
     </div>
     <div class="bars">${bar('Clima', s.parts.clima)}${bar('Rotación', s.parts.rot)}${bar('Agua', s.parts.agua)}${bar('Suelo', s.parts.suelo)}${bar('Erosión', s.parts.erosion)}</div>
-    <h4>Por qué</h4>${li(why)}
-    <h4>Evidencia</h4>${li(evidence)}
-    <h4>Beneficios posibles</h4>${li(benefits)}
-    <h4>Lagunas de información</h4>${li(gaps)}
-    <h4>Riesgos a revisar</h4>${li(risks)}
+    <button type="button" class="strat-toggle btn-ghost" aria-expanded="false">Ver más</button>
+    <div class="strat-more" hidden>
+      <div><h4>Por qué</h4>${li(why)}</div>
+      <div><h4>Evidencia</h4>${li(evidence)}</div>
+      <div><h4>Beneficios posibles</h4>${li(benefits)}</div>
+      <div><h4>Lagunas de información</h4>${li(gaps)}</div>
+      <div><h4>Riesgos a revisar</h4>${li(risks)}</div>
+    </div>
   </div>`;
+}
+
+document.addEventListener('click', e => {
+  const btn = e.target.closest('.strat-toggle');
+  if(!btn) return;
+  const card = btn.closest('.strat');
+  const open = !card.classList.contains('strat-open');
+  // Solo una tarjeta desplegada a la vez: se cierran todas y se abre la elegida.
+  document.querySelectorAll('.strat.strat-open').forEach(c => setStratOpen(c, false));
+  setStratOpen(card, open);
+});
+
+function setStratOpen(card, open){
+  const btn = card.querySelector('.strat-toggle');
+  card.classList.toggle('strat-open', open);
+  card.querySelector('.strat-more').hidden = !open;
+  btn.setAttribute('aria-expanded', String(open));
+  btn.textContent = open ? 'Ver menos' : 'Ver más';
 }
 
 function renderStrategies(A, adj, sc){
