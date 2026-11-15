@@ -368,6 +368,7 @@ function setStratOpen(card, open){
   const btn = card.querySelector('.strat-toggle');
   const panel = document.getElementById('stratDetail');
   card.classList.toggle('strat-open', open);
+  document.getElementById('strategyGrid').classList.toggle('has-open', open);
   btn.setAttribute('aria-expanded', String(open));
   btn.textContent = open ? 'Ver menos' : 'Ver más';
   if(open){
@@ -418,6 +419,7 @@ function renderStrategies(A, adj, sc){
     'Prioridad aplicada: ' + document.getElementById('priority').selectedOptions[0].textContent + '.' + noPrev;
   document.getElementById('stratDetail').hidden = true;
   document.getElementById('stratDetail').innerHTML = '';
+  document.getElementById('strategyGrid').classList.remove('has-open');
   document.getElementById('strategyGrid').innerHTML = picks.map(p => buildStrategyCard(p.title, p.key, p.prev, A, adj, sc, p.main)).join('');
 }
 

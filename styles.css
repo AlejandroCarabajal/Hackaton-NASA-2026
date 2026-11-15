@@ -555,9 +555,13 @@ input[type="range"] {
   display: none;
 }
 /* Tarjeta seleccionada; su detalle se muestra en horizontal debajo de todas las tarjetas */
-.strat.strat-open {
-  border-color: var(--leaf);
-  box-shadow: 0 0 0 1px var(--leaf) inset;
+.strat {
+  transition: filter 0.2s, opacity 0.2s;
+}
+/* Con una tarjeta desplegada, las demás se ven en gris (no seleccionadas) */
+.strategy-grid.has-open .strat:not(.strat-open) {
+  filter: grayscale(1);
+  opacity: 0.5;
 }
 .strat-detail {
   margin-top: 14px;
