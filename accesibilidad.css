@@ -304,3 +304,53 @@ textarea:focus-visible {
   }
 }
 
+/* ENCABEZADO DEL PANEL */
+
+.accesibilidad-encabezado {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 15px;
+}
+
+.panel-accesibilidad .accesibilidad-encabezado h2 {
+  margin: 0;
+}
+
+/* BOTON PARA CERRAR */
+
+.panel-accesibilidad .cerrar-accesibilidad {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  flex-shrink: 0;
+
+  border: 1px solid var(--line, #315343);
+  border-radius: 8px;
+
+  background: var(--panel-2, #1c382a);
+  color: var(--text, #ffffff);
+
+  font-size: 26px;
+  line-height: 1;
+  cursor: pointer;
+
+  transition: background 0.2s, color 0.2s;
+}
+
+.panel-accesibilidad .cerrar-accesibilidad:hover {
+  background: var(--leaf, #58c47b);
+  color: var(--bg, #092015);
+}
+
+.panel-accesibilidad .cerrar-accesibilidad:focus-visible {
+  outline: 3px solid var(--leaf, #58c47b);
+  outline-offset: 2px;
+}
+
+
