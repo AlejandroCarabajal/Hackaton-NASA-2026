@@ -918,3 +918,7 @@ body {
   text-align: justify;
 }
 
+.param-table{width:100%;border-collapse:collapse;font-size:14px}
+.param-table th,.param-table td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line, rgba(128,128,128,.3))}
+.param-table th{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.8}
+.param-table td:nth-child(2){white-space:nowrap}

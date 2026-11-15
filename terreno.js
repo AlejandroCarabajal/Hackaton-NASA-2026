@@ -117,6 +117,7 @@ document.addEventListener('agrovista:analisis-listo', actualizarBotones);
     if (!A) return { inicio, analisis: [{ title: 'ANÁLISIS CLIMÁTICO NASA POWER', rows: ['No se ejecutó «Analizar parcela»: este PDF incluye solo los datos manuales.'] }] };
     const stats = [...document.querySelectorAll('#statsGrid .stat')].map(s => [domText(s.querySelector('.label')), domText(s.querySelector('.value'))]);
     const checks = [...document.querySelectorAll('#cropChecklist .verdict-text')].map(e => domText(e).replace(/^-\s*/, ''));
+    const paramRows = [...document.querySelectorAll('#cropChecklist .param-table tbody tr')].map(tr => [...tr.cells].map(domText));
     const cards = [...document.querySelectorAll('#strategyGrid .strat')];
     const stratTable = cards.map(c => [domText(c.querySelector('.strat-tag')), domText(c.querySelector('.strat-crop')), domText(c.querySelector('.strat-score')), ...[...c.querySelectorAll('.bar i')].map(i => i.style.width)]);
     const stratDetail = cards.flatMap(c => [
@@ -127,7 +128,8 @@ document.addEventListener('agrovista:analisis-listo', actualizarBotones);
     return { inicio, analisis: [
       { title: 'ESTADO HÍDRICO GENERAL', rows: [domText($('dot')) + ': ' + domText($('verdictText'))] },
       { title: 'ÚLTIMOS ' + A.windowDays + ' DÍAS VS. CLIMATOLOGÍA (' + A.spanLabel + ')', rows: stats },
-      { title: 'RECOMENDACIÓN PARA TU CULTIVO', rows: [domText($('cropDot')) + ': ' + domText($('cropVerdictText')), ...checks, domText($('rotationNote'))].filter(Boolean) },
+      { title: 'RECOMENDACIÓN PARA TU CULTIVO', rows: [domText($('cropDot')) + ': ' + domText($('cropVerdictText')), ...checks, domText($('rotationNote'))].filter(Boolean),
+        table: { head: ['Parámetro', 'Actual', 'Ideal'], widths: [70, 34, 70], body: paramRows } },
       { title: 'COMPARACIÓN DE ESTRATEGIAS DE ROTACIÓN', rows: [domText($('strategyNote'))].filter(Boolean),
         table: { head: ['Estrategia', 'Cultivo', 'Puntaje', 'Clima', 'Rotación', 'Agua', 'Suelo', 'Erosión'], widths: [44, 28, 16, 17, 18, 17, 17, 17], body: stratTable } },
       { title: 'DETALLE DE LAS ESTRATEGIAS', rows: stratDetail },

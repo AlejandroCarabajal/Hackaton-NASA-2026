@@ -199,6 +199,7 @@ function agTempChecks(cropKey, rec, tempAdj){
   const soilEst = meanOf(last);
   const meanT = meanOf(valid);
   const evidence = [], risks = [], blockers = [];
+  let diasSeguidos = 0;
 
   evidence.push(`Temperatura del suelo estimada (promedio de T2M de ${last.length} días): <b>${soilEst.toFixed(1)} °C</b> — recomendada para sembrar ${name}: ${ag.sow[0]}–${ag.sow[1]} °C.`);
   evidence.push(`Temperatura media del período: ${meanT.toFixed(1)} °C — base de crecimiento ${ag.base[0] === ag.base[1] ? ag.base[0] : ag.base[0] + '–' + ag.base[1]} °C, óptima ${ag.opt[0]}–${ag.opt[1]} °C, máxima de desarrollo ${ag.max[0]}–${ag.max[1]} °C (referencia orientativa).`);
@@ -218,6 +219,7 @@ function agTempChecks(cropKey, rec, tempAdj){
       if(daily[i] !== null && daily[i] >= ag.sow[0]) run++; else break;
     }
     evidence.push(`Días consecutivos recientes con temperatura ≥ ${ag.sow[0]} °C: <b>${run}</b> (se esperan al menos ${ag.consec} seguidos para una emergencia uniforme).`);
+    diasSeguidos = run;
     if(run < ag.consec){
       blockers.push({ level: 'esperar', text: `conviene esperar varios días seguidos con suelo entre ${ag.sow[0]} y ${ag.sow[1]} °C para una emergencia uniforme (van ${run}).` });
     }
@@ -236,7 +238,13 @@ function agTempChecks(cropKey, rec, tempAdj){
   if(hot > 0) risks.push(`${hot} día(s) con T máx ≥ ${ag.max[0]} °C (referencia de estrés térmico; tolerancia al calor ${ag.heat.toLowerCase()}).`);
   if(meanT > ag.opt[1]) risks.push(`La temperatura media supera el óptimo de crecimiento (${ag.opt[1]} °C).`);
 
-  return { evidence, risks, blockers, soilEst };
+  const filas = [
+    ['Temperatura del suelo estimada (' + last.length + ' días)', soilEst.toFixed(1) + ' °C', `${ag.sow[0]}–${ag.sow[1]} °C (para sembrar)`],
+    ['Temperatura media del período', meanT.toFixed(1) + ' °C', `óptima ${ag.opt[0]}–${ag.opt[1]} °C · máx. ${ag.max[0]}–${ag.max[1]} °C`],
+    ['Germinación (suelo)', soilEst.toFixed(1) + ' °C', `mínima ${ag.germMin[0]}–${ag.germMin[1]} °C · óptima ${ag.germOpt[0]}–${ag.germOpt[1]} °C`]
+  ];
+  if(ag.consec) filas.push(['Días seguidos con T ≥ ' + ag.sow[0] + ' °C', String(diasSeguidos), `al menos ${ag.consec}`]);
+  return { evidence, risks, blockers, soilEst, filas };
 }
 
 /* ---------- puntaje de estrategias ---------- */
@@ -449,8 +457,9 @@ function renderCrop(A, adj, sc){
     const r = evaluateCrop(lastCropKey, lastPrevKey, adj.root, adj.temp);
     const agc = agTempChecks(lastCropKey, A.recent, sc.tempAdj);
     let dotColor = r.dotColor, dotLabel = r.dotLabel, verdict = r.verdict;
-    let items = r.checklist.slice();
+    let items = [], filas = r.filas.slice();
     if(agc){
+      filas = filas.concat(agc.filas);
       const hard = agc.blockers.filter(b => b.level === 'riesgo');
       const soft = agc.blockers.filter(b => b.level === 'esperar');
       if(hard.length){ dotColor = 'var(--red)'; dotLabel = 'RIESGO'; }
@@ -459,11 +468,12 @@ function renderCrop(A, adj, sc){
         const extra = agc.blockers.map(b => b.text).join(' Además, ');
         verdict = r.verdict.replace(' Es un buen momento para sembrar.', '') + ` Ojo: ${extra}`;
       }
-      items = items.concat(agc.evidence, agc.risks.map(t => '⚠ ' + t));
+      items = agc.risks.map(t => '⚠ ' + t);
     }
     dot.style.background = dotColor; dot.style.color = 'var(--sobre-acento, #0c1712)'; dot.textContent = dotLabel;
     document.getElementById('cropVerdictText').innerHTML = verdict;
-    document.getElementById('cropChecklist').innerHTML = items.map(c => `<div class="verdict-text" style="margin-bottom:6px;">• ${c}</div>`).join('') + scenarioTxt;
+    const tabla = `<table class="param-table"><thead><tr><th>Parámetro</th><th>Actual</th><th>Ideal</th></tr></thead><tbody>${filas.map(f => `<tr><td>${f[0]}</td><td><b>${f[1]}</b></td><td>${f[2]}</td></tr>`).join('')}</tbody></table>`;
+    document.getElementById('cropChecklist').innerHTML = tabla + items.map(c => `<div class="verdict-text" style="margin:8px 0 0;">${c}</div>`).join('') + scenarioTxt;
     document.getElementById('rotationNote').innerHTML = r.rotationHtml;
   }
   document.getElementById('cropPanel').style.display = 'block';

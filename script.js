@@ -712,6 +712,10 @@ function evaluateCrop(cropKey, prevCropKey, avgSoilMoisture, avgTemp){
   const checklist = [];
   checklist.push(`Humedad de suelo (zona de raíces) actual: <b>${(avgSoilMoisture*100).toFixed(0)}%</b> — rango ideal para ${crop.label.toLowerCase()}: ${(moistMin*100).toFixed(0)}–${(moistMax*100).toFixed(0)}%.`);
   checklist.push(`Temperatura media actual: <b>${avgTemp.toFixed(1)}°C</b> — rango ideal: ${tempMin}–${tempMax}°C.`);
+  const filas = [
+    ['Humedad de suelo (zona de raíces)', `${(avgSoilMoisture*100).toFixed(0)}%`, `${(moistMin*100).toFixed(0)}–${(moistMax*100).toFixed(0)}%`],
+    ['Temperatura media', `${avgTemp.toFixed(1)} °C`, `${tempMin}–${tempMax} °C`]
+  ];
 
   let dotColor, dotLabel, verdict;
   const cropName = crop.label.toLowerCase();
@@ -739,7 +743,7 @@ function evaluateCrop(cropKey, prevCropKey, avgSoilMoisture, avgTemp){
   let rotationHtml = '';
   if(prevCropKey && prevCropKey !== 'ninguno'){
     const prev = CROP_DB[prevCropKey];
-    if(!prev) return { dotColor, dotLabel, verdict, checklist, rotationHtml };
+    if(!prev) return { dotColor, dotLabel, verdict, checklist, filas, rotationHtml };
 
     const prevName = prev.label.toLowerCase();
     const prevFam = FAMILY_LABEL[prev.family] || prev.family;
@@ -779,7 +783,7 @@ function evaluateCrop(cropKey, prevCropKey, avgSoilMoisture, avgTemp){
     }
   }
 
-  return { dotColor, dotLabel, verdict, checklist, rotationHtml };
+  return { dotColor, dotLabel, verdict, checklist, filas, rotationHtml };
 }
 
 async function fetchPower(lat, lon, startDate, endDate){
