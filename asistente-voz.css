@@ -379,3 +379,21 @@ body.asistente-abierto .asistente-flotante {
   #asistenteHablar { width: 100%; }
   .asistente-flotante { right: 14px; bottom: 14px; width: 60px; height: 60px; font-size: 26px; }
 }
+
+/* Celular: los tres botones flotantes en una fila abajo (accesibilidad · voz · volver arriba) */
+@media (max-width: 600px) {
+  .boton-accesibilidad,
+  .asistente-flotante,
+  .boton-volver-arriba {
+    bottom: 14px;
+    width: 56px;
+    height: 56px;
+  }
+  .boton-accesibilidad { right: 150px; }
+  .asistente-flotante  { right: 82px; }
+  .boton-volver-arriba { right: 14px; }
+  .panel-accesibilidad {
+    bottom: 82px;
+    max-height: calc(100dvh - 100px);
+  }
+}
