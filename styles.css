@@ -528,24 +528,84 @@ input[type="range"] {
   font-weight: 400;
 }
 .bars {
-  margin: 12px 0 4px;
+  margin: 14px 0 10px;
   display: grid;
-  gap: 5px;
+  gap: 10px;
 }
 .bar {
   display: grid;
-  grid-template-columns: 62px 1fr;
+  grid-template-columns: 76px 1fr;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: 12px;
   color: var(--text-dim);
 }
 .bar-track {
-  height: 6px;
+  height: 16px;
   background: var(--line);
-  border-radius: 3px;
+  border-radius: 8px;
   overflow: hidden;
+}
+.strat-toggle {
+  width: 100%;
+  margin-top: 4px;
+}
+.strat-more[hidden] {
+  display: none;
+}
+/* Tarjeta seleccionada; su detalle se muestra en horizontal debajo de todas las tarjetas */
+.strat {
+  transition: filter 0.2s, opacity 0.2s;
+}
+/* Con una tarjeta desplegada, las demás se ven en gris (no seleccionadas) */
+.strategy-grid.has-open .strat:not(.strat-open) {
+  filter: grayscale(1);
+  opacity: 0.5;
+}
+.strat-detail {
+  margin-top: 14px;
+  background: var(--campo, #0d1a14);
+  border: 1px solid var(--leaf);
+  border-radius: 10px;
+  padding: 16px;
+}
+.strat-detail[hidden] {
+  display: none;
+}
+.strat-detail-title {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 4px;
+}
+.strat-detail-cols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0 24px;
+}
+.strat-detail-cols > div {
+  min-width: 0;
+}
+.strat-detail h4 {
+  margin: 14px 0 4px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--leaf);
+}
+.strat-detail ul {
+  margin: 0;
+  padding-left: 16px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text);
+}
+.strat-detail li {
+  margin-bottom: 3px;
 }
 .bar-track i {
   display: block;

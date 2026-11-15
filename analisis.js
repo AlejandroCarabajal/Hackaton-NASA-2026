@@ -346,15 +346,49 @@ function buildStrategyCard(title, key, prevKey, A, adj, sc, highlight){
     <div class="strat-head">
       <span class="strat-tag">${title}</span>
       <div class="strat-crop">${c.label}</div>
-      <div class="strat-score">${pct(s.total)}<small>/100</small></div>
+      <div class="strat-score">${pct(s.total)}%</div>
     </div>
     <div class="bars">${bar('Clima', s.parts.clima)}${bar('Rotación', s.parts.rot)}${bar('Agua', s.parts.agua)}${bar('Suelo', s.parts.suelo)}${bar('Erosión', s.parts.erosion)}</div>
-    <h4>Por qué</h4>${li(why)}
-    <h4>Evidencia</h4>${li(evidence)}
-    <h4>Beneficios posibles</h4>${li(benefits)}
-    <h4>Lagunas de información</h4>${li(gaps)}
-    <h4>Riesgos a revisar</h4>${li(risks)}
+    <button type="button" class="strat-toggle btn-ghost" aria-expanded="false">Ver más</button>
+    <div class="strat-more" hidden>
+      <div><h4>Por qué</h4>${li(why)}</div>
+      <div><h4>Evidencia</h4>${li(evidence)}</div>
+      <div><h4>Beneficios posibles</h4>${li(benefits)}</div>
+      <div><h4>Lagunas de información</h4>${li(gaps)}</div>
+      <div><h4>Riesgos a revisar</h4>${li(risks)}</div>
+    </div>
   </div>`;
+}
+
+document.addEventListener('click', e => {
+  const btn = e.target.closest('.strat-toggle');
+  if(!btn) return;
+  const card = btn.closest('.strat');
+  const open = !card.classList.contains('strat-open');
+  // Solo una tarjeta desplegada a la vez: se cierran todas y se abre la elegida.
+  document.querySelectorAll('.strat.strat-open').forEach(c => setStratOpen(c, false));
+  setStratOpen(card, open);
+});
+
+// El detalle se muestra en un panel horizontal debajo de todas las tarjetas.
+// El texto original queda oculto dentro de cada tarjeta (lo usa el PDF).
+function setStratOpen(card, open){
+  const btn = card.querySelector('.strat-toggle');
+  const panel = document.getElementById('stratDetail');
+  card.classList.toggle('strat-open', open);
+  document.getElementById('strategyGrid').classList.toggle('has-open', open);
+  btn.setAttribute('aria-expanded', String(open));
+  btn.textContent = open ? 'Ver menos' : 'Ver más';
+  if(open){
+    const title = card.querySelector('.strat-tag').textContent + ' — ' + card.querySelector('.strat-crop').textContent;
+    panel.innerHTML = '<div class="strat-detail-title"></div><div class="strat-detail-cols"></div>';
+    panel.firstChild.textContent = title;
+    panel.lastChild.innerHTML = card.querySelector('.strat-more').innerHTML;
+    panel.hidden = false;
+  } else {
+    panel.hidden = true;
+    panel.innerHTML = '';
+  }
 }
 
 function renderStrategies(A, adj, sc){
@@ -391,6 +425,9 @@ function renderStrategies(A, adj, sc){
   const noPrev = known ? '' : ' No informaste cultivo anterior: la rotación se puntúa como neutra.';
   document.getElementById('strategyNote').textContent =
     'Prioridad aplicada: ' + document.getElementById('priority').selectedOptions[0].textContent + '.' + noPrev;
+  document.getElementById('stratDetail').hidden = true;
+  document.getElementById('stratDetail').innerHTML = '';
+  document.getElementById('strategyGrid').classList.remove('has-open');
   document.getElementById('strategyGrid').innerHTML = picks.map(p => buildStrategyCard(p.title, p.key, p.prev, A, adj, sc, p.main)).join('');
 }
 
