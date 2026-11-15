@@ -570,6 +570,8 @@ function renderAll(){
   document.getElementById('chartPanel').style.display = 'block';
   renderGaps(A);
   document.getElementById('terrenoPanel').style.display = 'block';
+  // Aviso para accesibilidad.js: actualiza el resumen, los gráficos legibles y el semáforo en palabras
+  document.dispatchEvent(new Event('agronasa:resultados'));
 }
 
 const RESULT_PANELS = ['resultPanel','statsPanel','cropPanel','strategyPanel','annualPanel','chartPanel','gapsPanel'];

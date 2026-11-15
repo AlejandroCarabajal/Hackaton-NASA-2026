@@ -1,0 +1,162 @@
+/* =====================================================================
+   Asistente por voz de AgroNasa
+   Usa las variables de color de styles.css / tema.css: funciona en los
+   modos oscuro, claro y alto contraste.
+   ===================================================================== */
+
+.asistente {
+  border: 2px solid var(--leaf);
+}
+.asistente-barra {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.asistente-titulo {
+  margin: 0 0 4px;
+  font-size: 20px;
+  color: var(--text);
+}
+.asistente-desc {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 15px;
+  line-height: 1.5;
+  max-width: 70ch;
+}
+.asistente-inicio {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+#asistenteIniciar {
+  font-size: 16px;
+  padding: 14px 22px;
+}
+
+.asistente-cuerpo {
+  margin-top: 16px;
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+}
+
+/* Indicador: escuchando / hablando / trabajando */
+.asistente-estado {
+  min-height: 24px;
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+}
+.asistente-estado[data-estado="escuchando"] {
+  color: var(--red);
+}
+.asistente-estado[data-estado="escuchando"]::before {
+  content: "";
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 8px;
+  border-radius: 50%;
+  background: var(--red);
+  animation: asistente-pulso 1s ease-in-out infinite;
+}
+@keyframes asistente-pulso {
+  50% { opacity: 0.25; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .asistente-estado[data-estado="escuchando"]::before { animation: none; }
+}
+
+/* Conversación */
+.asistente-log {
+  margin: 0 0 14px;
+  padding: 0;
+  max-height: 320px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.asistente-log p {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 16px;
+  line-height: 1.5;
+  max-width: 85%;
+  color: var(--text);
+}
+.asistente-log:focus-visible {
+  outline: 3px solid var(--amber);
+  outline-offset: 2px;
+}
+.asistente-log .msg-asistente {
+  background: var(--campo, #0d1a14);
+  border: 1px solid var(--line);
+  align-self: flex-start;
+}
+.asistente-log .msg-usuario {
+  background: var(--resalte, rgba(95, 212, 138, 0.12));
+  border: 1px solid var(--leaf);
+  align-self: flex-end;
+}
+.asistente-log .msg-quien {
+  font-weight: 700;
+}
+
+/* Responder escribiendo */
+.asistente-escribir label {
+  display: block;
+  margin-bottom: 6px;
+}
+.asistente-fila {
+  display: flex;
+  gap: 8px;
+}
+.asistente-fila input {
+  flex: 1;
+  font-size: 16px;
+}
+
+.asistente-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+#asistenteHablar {
+  font-size: 16px;
+  padding: 12px 22px;
+}
+.asistente-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--text);
+  cursor: pointer;
+}
+.asistente-check input {
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  accent-color: var(--leaf);
+}
+.asistente-privacidad {
+  margin: 12px 0 0;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+@media (max-width: 600px) {
+  .asistente-inicio { align-items: stretch; width: 100%; }
+  .asistente-log p { max-width: 100%; }
+  #asistenteIniciar,
+  #asistenteHablar { width: 100%; }
+}

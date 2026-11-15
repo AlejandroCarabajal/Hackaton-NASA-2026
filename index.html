@@ -8,9 +8,12 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="tema.css">
+<link rel="stylesheet" href="accesibilidad.css">
+<link rel="stylesheet" href="asistente-voz.css">
 <script src="tema.js"></script>
 </head>
 <body>
+  <a class="saltar" href="#contenido">Saltar al contenido</a>
   
   <header>
     <div class="tema-selector" role="group" aria-label="Contraste de la pantalla">
@@ -19,19 +22,49 @@
       <button type="button" data-tema-opcion="alto" aria-pressed="false">Alto contraste</button>
     </div>
     <div class="header-inner">
-      <img class="logo" src="imagenes/logo_nasa_agri_2.png" alt="Logo AgroVista">
+      <img class="logo" src="imagenes/logo_nasa_agri_2.png" alt="Logo de AgroNasa">
       <div class="eyebrow"><b>NASA Space Apps Challenge · Prototipo</b> </div>
       <h1>AgroNasa</h1>
     </div>
   </header>
-<div class="wrap">
+<div class="wrap" id="contenido" tabindex="-1">
 
 
 
   <p class="sub">Consulta datos climáticos reales de la <strong>API pública de NASA POWER</strong> para una parcela y compara el período reciente contra el promedio histórico (que vos configurás) y evalúa estrategias de rotación según tus prioridades.</p>
 
+  <section class="panel asistente" id="asistente" aria-labelledby="asistenteTitulo">
+    <div class="asistente-barra">
+      <div>
+        <h2 class="asistente-titulo" id="asistenteTitulo">🎙 Asistente por voz</h2>
+        <p class="asistente-desc">Te guía hablando, paso a paso: dónde está tu campo, qué querés sembrar, los resultados del análisis, los datos del terreno y el informe en PDF. Pensado para personas ciegas o con baja visión.</p>
+      </div>
+      <div class="asistente-inicio">
+        <button type="button" id="asistenteIniciar">Iniciar asistente por voz</button>
+        <label class="asistente-check"><input type="checkbox" id="asistenteConVoz" checked> El asistente habla (desmarcalo si usás un lector de pantalla)</label>
+      </div>
+    </div>
+    <div class="asistente-cuerpo" id="asistenteCuerpo" hidden>
+      <div class="asistente-estado" id="asistenteEstado" aria-hidden="true"></div>
+      <div class="asistente-log" id="asistenteLog" role="log" aria-live="off" aria-label="Conversación con el asistente" tabindex="0"></div>
+      <form class="asistente-escribir" id="asistenteForm">
+        <label for="asistenteTexto">También podés escribir tu respuesta y presionar Enter</label>
+        <div class="asistente-fila">
+          <input id="asistenteTexto" type="text" autocomplete="off">
+          <button type="submit">Enviar</button>
+        </div>
+      </form>
+      <div class="asistente-acciones">
+        <button type="button" id="asistenteHablar">🎤 Hablar</button>
+        <button type="button" id="asistenteRepetir" class="btn-ghost">🔁 Repetir</button>
+        <button type="button" id="asistenteTerminar" class="btn-ghost">Terminar asistente</button>
+      </div>
+      <p class="asistente-privacidad">El reconocimiento de voz lo hace tu navegador. En Chrome y Edge, el audio se envía a los servidores de Google o Microsoft para entenderlo. Funciona mejor en Chrome o Edge, con Live Server o https.</p>
+    </div>
+  </section>
+
   <div class="panel">
-    <div class="panel-title">01 — Ubicación de la parcela</div>
+    <h2 class="panel-title">01 — Ubicación de la parcela</h2>
 
     <div class="search-bar">
       <div class="search-field">
@@ -39,6 +72,7 @@
         <ul id="searchSuggestions" class="search-suggestions" role="listbox" hidden></ul>
       </div>
       <button id="searchBtn">Buscar</button>
+      <button id="miUbicacion" type="button" class="btn-ghost">📍 Usar mi ubicación</button>
     </div>
     <div class="search-status" id="searchStatus" role="status"></div>
 
@@ -77,7 +111,7 @@
   </div>
 
   <div class="panel">
-    <div class="panel-title">02 — Cultivo</div>
+    <h2 class="panel-title">02 — Cultivo</h2>
     <div class="row">
       <div class="field">
         <label for="crop">Cultivo que querés sembrar</label>
@@ -110,7 +144,7 @@
   </div>
 
   <div class="panel">
-    <div class="panel-title">03 — Prioridades y escenario</div>
+    <h2 class="panel-title">03 — Prioridades y escenario</h2>
     <div class="row">
       <div class="field">
         <label for="priority">¿Qué priorizás?</label>
@@ -158,10 +192,20 @@
   </div>
 
   <button id="run" style="width:100%;margin:0 0 16px;">Analizar parcela</button>
-  <div class="status" id="status" style="margin-bottom:16px;"></div>
+  <div class="status" id="status" role="status" aria-live="polite" style="margin-bottom:16px;"></div>
+
+  <section class="panel resumen-simple" id="resumenSimple" aria-labelledby="resumenTitulo" hidden>
+    <h2 class="panel-title" id="resumenTitulo">Resumen en palabras simples</h2>
+    <p class="resumen-texto" id="resumenTexto"></p>
+    <div class="resumen-acciones">
+      <button type="button" id="escucharResumen">🔊 Escuchar resumen</button>
+      <button type="button" id="detenerResumen" class="btn-ghost" hidden>⏹ Detener</button>
+    </div>
+    <p class="resumen-nota" id="resumenNota"></p>
+  </section>
 
   <div class="panel" id="resultPanel" style="display:none;">
-    <div class="panel-title">04 — Estado hídrico general</div>
+    <h2 class="panel-title">04 — Estado hídrico general</h2>
     <div class="semaforo">
       <div class="dot" id="dot">--</div>
       <div class="verdict-text" id="verdictText"></div>
@@ -170,13 +214,13 @@
   </div>
 
   <div class="panel" id="statsPanel" style="display:none;">
-    <div class="panel-title">05 — Últimos <span class="win-days">14</span> días vs. climatología (promedio de <span class="clim-span">10 años</span>)</div>
+    <h2 class="panel-title">05 — Últimos <span class="win-days">14</span> días vs. climatología (promedio de <span class="clim-span">10 años</span>)</h2>
     <div class="grid" id="statsGrid"></div>
     <details class="source-box"><summary>Fuente</summary><div class="source-box-body">NASA POWER API (datos diarios, AG community). Promedio histórico: mismo período calendario en los años elegidos. Heladas: T mín ≤ 2 °C. Calor extremo: T máx ≥ 35 °C</div></details>
   </div>
 
   <div class="panel" id="cropPanel" style="display:none;">
-    <div class="panel-title">06 — Recomendación para tu cultivo</div>
+    <h2 class="panel-title">06 — Recomendación para tu cultivo</h2>
     <div class="semaforo">
       <div class="dot" id="cropDot">--</div>
       <div class="verdict-text" id="cropVerdictText"></div>
@@ -187,14 +231,14 @@
   </div>
 
   <div class="panel" id="strategyPanel" style="display:none;">
-    <div class="panel-title">07 — Comparación de estrategias de rotación</div>
+    <h2 class="panel-title">07 — Comparación de estrategias de rotación</h2>
     <div class="strategy-note" id="strategyNote"></div>
     <div class="strategy-grid" id="strategyGrid"></div>
     <div class="source">Puntaje 0–100 = clima actual + rotación + demanda de agua + suelo + erosión, ponderado según tu prioridad. Es una guía para explorar opciones, no reemplaza el criterio del agricultor ni de un agrónomo local.</div>
   </div>
 
   <div class="panel" id="annualPanel" style="display:none;">
-    <div class="panel-title">08 — Calendario climático anual (promedio de <span class="clim-span">10 años</span>)</div>
+    <h2 class="panel-title">08 — Calendario climático anual (promedio de <span class="clim-span">10 años</span>)</h2>
     <div class="chart-wrap"><svg id="annualChart" width="800" height="270" viewBox="0 0 800 270"></svg></div>
     <div class="annual-legend">
       <span><i style="background:var(--lluvia, #4aa3df)"></i>Lluvia mensual (mm)</span>
@@ -209,19 +253,19 @@
   </div>
 
   <div class="panel" id="chartPanel" style="display:none;">
-    <div class="panel-title">09 — Precipitación diaria (mm) — últimos <span class="win-days">14</span> días</div>
+    <h2 class="panel-title">09 — Precipitación diaria (mm) — últimos <span class="win-days">14</span> días</h2>
     <div class="chart-wrap"><svg id="chart" width="800" height="220" viewBox="0 0 800 220"></svg></div>
     <details class="source-box"><summary>Fuente</summary><div class="source-box-body">NASA POWER API (PRECTOTCORR)</div></details>
   </div>
 
   <div class="panel" id="gapsPanel" style="display:none;">
-    <div class="panel-title">10 — Qué no sabemos y dónde se necesita criterio local</div>
+    <h2 class="panel-title">10 — Qué no sabemos y dónde se necesita criterio local</h2>
     <ul class="gaps-list" id="gapsList"></ul>
   </div>
 
 
   <section class="panel terreno-panel" id="terrenoPanel" style="display:none;">
-    <div class="panel-title">Datos del terreno · ingreso manual</div>
+    <h2 class="panel-title">Datos del terreno · ingreso manual</h2>
     <p>Completá los datos que conocés de tu parcela. Los campos son opcionales; las mediciones de laboratorio ofrecen resultados más confiables.</p>
     <form id="terrenoForm">
       <div class="terreno-grid">
@@ -290,5 +334,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
 <script src="./libs/jspdf.umd.min.js"></script>
 <script src="terreno.js"></script>
+<script src="accesibilidad.js"></script>
+<script src="asistente-voz.js"></script>
+<div id="anuncios" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
 </body>
 </html>
