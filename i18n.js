@@ -267,24 +267,55 @@
   // El selector de fecha nativo muestra el formato del navegador y no se puede cambiar desde la página.
   // En inglés se usa un campo de texto con formato yyyy-mm-dd (el valor interno es el mismo: ISO).
   function camposFecha(){
-    document.querySelectorAll('input[type="date"], input[data-i18n-fecha]').forEach(el => {
+    document.querySelectorAll('input[type="date"]:not(.i18n-fecha-nativo), input[data-i18n-fecha]').forEach(el => {
       if(idioma === 'en' && el.type === 'date'){
         el.setAttribute('data-i18n-fecha', '');
         el.type = 'text';
         el.placeholder = 'yyyy-mm-dd'; el.maxLength = 10; el.inputMode = 'numeric';
         el.setAttribute('pattern', '\\d{4}-\\d{2}-\\d{2}'); el.title = 'yyyy-mm-dd';
+        // Botón de calendario: abre el selector nativo (oculto) y copia la fecha elegida al campo
+        const caja = document.createElement('span');
+        caja.className = 'i18n-fecha-caja';
+        el.parentNode.insertBefore(caja, el);
+        caja.appendChild(el);
+        const nativo = document.createElement('input');
+        nativo.type = 'date'; nativo.className = 'i18n-fecha-nativo'; nativo.tabIndex = -1;
+        nativo.setAttribute('aria-hidden', 'true'); nativo.setAttribute('data-no-i18n', '');
+        const boton = document.createElement('button');
+        boton.type = 'button'; boton.className = 'i18n-fecha-boton'; boton.textContent = '📅';
+        boton.setAttribute('aria-label', 'Open calendar'); boton.title = 'Open calendar';
+        boton.setAttribute('data-no-i18n', '');
+        boton.addEventListener('click', () => {
+          nativo.min = el.min || ''; nativo.max = el.max || '';
+          nativo.value = /^\d{4}-\d{2}-\d{2}$/.test(el.value) ? el.value : '';
+          try { nativo.showPicker(); } catch(e){ nativo.focus(); nativo.click(); }
+        });
+        nativo.addEventListener('change', () => {
+          if(!nativo.value) return;
+          el.value = nativo.value;
+          el.dispatchEvent(new Event('input', { bubbles: true }));
+          el.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+        caja.append(nativo, boton);
       } else if(idioma === 'es' && el.hasAttribute('data-i18n-fecha')){
         el.removeAttribute('data-i18n-fecha');
         el.type = 'date';
-        el.removeAttribute('placeholder'); el.removeAttribute('maxlength'); el.removeAttribute('inputmode');
-        el.removeAttribute('pattern'); el.removeAttribute('title');
+        ['placeholder', 'maxlength', 'inputmode', 'pattern', 'title'].forEach(a => el.removeAttribute(a));
+        const caja = el.parentNode;
+        if(caja && caja.classList && caja.classList.contains('i18n-fecha-caja')){
+          caja.parentNode.insertBefore(el, caja);
+          caja.remove();
+        }
       }
     });
   }
 
   /* ---------- botón ES / EN ---------- */
   const estilo = '.idioma-selector{display:inline-flex;gap:4px;margin-left:6px;padding-left:8px;border-left:1px solid rgba(255,255,255,.25)}' +
-    'html[data-tema="claro"] .idioma-selector{border-left-color:rgba(0,0,0,.25)}';
+    'html[data-tema="claro"] .idioma-selector{border-left-color:rgba(0,0,0,.25)}' +
+    '.i18n-fecha-caja{position:relative;display:block}.i18n-fecha-caja>input[data-i18n-fecha]{width:100%;box-sizing:border-box;padding-right:2.4rem}' +
+    '.i18n-fecha-nativo{position:absolute;right:0;bottom:0;width:1px;height:1px;opacity:0;pointer-events:none;border:0;padding:0}' +
+    '.i18n-fecha-boton{position:absolute;right:.5rem;top:50%;transform:translateY(-50%);background:none;border:0;padding:.15rem .25rem;cursor:pointer;font-size:1.05rem;line-height:1;color:inherit;width:auto;min-height:0}';
 
   function marcarBotones(){
     document.querySelectorAll('.idioma-selector [data-idioma]').forEach(b =>

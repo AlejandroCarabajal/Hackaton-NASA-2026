@@ -146,7 +146,7 @@ document.addEventListener('agrovista:analisis-listo', actualizarBotones);
     if (![d.maquinas, d.servicios, d.gastos, trabajos, combustible, fijos].some(a => a.length)) return [];
     const num = n => Number(n) || 0;
     const suma = (a, k) => a.reduce((t, x) => t + num(x[k]), 0);
-    const money = n => new Intl.NumberFormat((window.AgroI18n ? AgroI18n.locale() : 'es-AR'), { style: 'currency', currency: 'ARS' }).format(num(n));
+    const money = n => (window.AgroI18n && AgroI18n.idioma() === 'en') ? 'U$D ' + new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(num(n)) : new Intl.NumberFormat((window.AgroI18n ? AgroI18n.locale() : 'es-AR'), { style: 'currency', currency: (window.AgroI18n && AgroI18n.idioma() === 'en' ? 'USD' : 'ARS') }).format(num(n));
     const fmtN = (n, dec) => num(n).toLocaleString((window.AgroI18n ? AgroI18n.locale() : 'es-AR'), { maximumFractionDigits: dec });
     const fecha = f => String(f || '').split('-').reverse().join('/') || 's/f';
     const filas = (a, fn, n) => {

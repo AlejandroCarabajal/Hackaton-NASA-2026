@@ -2,7 +2,7 @@
 'use strict';
 const KEY='agrovista_gestion_v1';
 const $=id=>document.getElementById(id);
-const money=n=>new Intl.NumberFormat((window.AgroI18n ? AgroI18n.locale() : 'es-AR'),{style:'currency',currency:'ARS'}).format(n||0);
+const money = n => (window.AgroI18n && AgroI18n.idioma() === 'en') ? 'U$D ' + new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n||0) : new Intl.NumberFormat((window.AgroI18n ? AgroI18n.locale() : 'es-AR'),{style:'currency',currency:(window.AgroI18n&&AgroI18n.idioma()==='en'?'USD':'ARS')}).format(n||0);
 const fechaHoy=()=>new Date().toISOString().slice(0,10);
 const nuevoId=()=>globalThis.crypto?.randomUUID?.()||`${Date.now()}-${Math.random().toString(36).slice(2)}`;
 const inicial=()=>({maquinas:[],servicios:[],gastos:[],trabajos:[],alquileres:[],combustible:[],fijos:[]});
