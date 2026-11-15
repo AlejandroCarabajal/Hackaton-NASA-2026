@@ -32,7 +32,7 @@ document.addEventListener('agrovista:analisis-listo', actualizarBotones);
   const escapeHtml = (v) => String(v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const value = (id) => document.getElementById(id).value.trim();
   const number = (id) => value(id) === '' ? null : Number(value(id));
-  const fmt = n => new Intl.NumberFormat('es-AR', {maximumFractionDigits:2}).format(n);
+  const fmt = n => new Intl.NumberFormat((window.AgroI18n ? AgroI18n.locale() : 'es-AR'), {maximumFractionDigits:2}).format(n);
   function collect() { return Object.fromEntries(ids.map(id => [id, value(id)])); }
   function analyze(e) {
     if (e) e.preventDefault();
@@ -85,7 +85,7 @@ document.addEventListener('agrovista:analisis-listo', actualizarBotones);
     terrenoPlagas:'Plagas y enfermedades', terrenoNotas:'Observaciones'
   };
 
-  const pdfText = s => String(s).replace(/\s+/g, ' ').trim()
+  const pdfText = s => String(window.AgroI18n ? AgroI18n.traducir(String(s)) : s).replace(/\s+/g, ' ').trim()
     .replace(/≤/g, '<=').replace(/≥/g, '>=').replace(/→/g, '->')
     .replace(/[−–—]/g, '-').replace(/[•·]/g, '-')
     .replace(/[^\x20-\x7E -ÿ]/g, '');
@@ -146,8 +146,8 @@ document.addEventListener('agrovista:analisis-listo', actualizarBotones);
     if (![d.maquinas, d.servicios, d.gastos, trabajos, combustible, fijos].some(a => a.length)) return [];
     const num = n => Number(n) || 0;
     const suma = (a, k) => a.reduce((t, x) => t + num(x[k]), 0);
-    const money = n => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(num(n));
-    const fmtN = (n, dec) => num(n).toLocaleString('es-AR', { maximumFractionDigits: dec });
+    const money = n => new Intl.NumberFormat((window.AgroI18n ? AgroI18n.locale() : 'es-AR'), { style: 'currency', currency: 'ARS' }).format(num(n));
+    const fmtN = (n, dec) => num(n).toLocaleString((window.AgroI18n ? AgroI18n.locale() : 'es-AR'), { maximumFractionDigits: dec });
     const fecha = f => String(f || '').split('-').reverse().join('/') || 's/f';
     const filas = (a, fn, n) => {
       const rows = a.slice(0, 40).map(fn);
@@ -268,12 +268,12 @@ const informe = report || {
     doc.setFont('helvetica', 'bold'); doc.setFontSize(22); doc.setTextColor(22, 98, 61);
     doc.text('AgroNasa', margin + 29, 21);
     doc.setFont('helvetica', 'normal'); doc.setFontSize(11); doc.setTextColor(40, 47, 48);
-    doc.text('Informe de análisis de parcela', margin + 29, 29);
+    doc.text(pdfText('Informe de análisis de parcela'), margin + 29, 29);
     const val2 = id => pdfText(document.getElementById(id) ? document.getElementById(id).value : '');
     const nombreParcela = val2('terrenoNombre');
-    if (nombreParcela) { doc.setFont('helvetica', 'bold'); doc.text('Parcela: ' + nombreParcela.slice(0, 60), margin + 29, 35.5); doc.setFont('helvetica', 'normal'); }
+    if (nombreParcela) { doc.setFont('helvetica', 'bold'); doc.text(pdfText('Parcela: ' + nombreParcela.slice(0, 60)), margin + 29, 35.5); doc.setFont('helvetica', 'normal'); }
     y = 40;
-    line('Fecha: ' + informe.date.toLocaleString('es-AR', { hourCycle: 'h23' }), {after:5});
+    line('Fecha: ' + informe.date.toLocaleString((window.AgroI18n ? AgroI18n.locale() : 'es-AR'), { hourCycle: 'h23' }), {after:5});
     const app = collectApp();
     const block = s => {
       if (y + 30 > bottom) nextPage();
@@ -323,7 +323,7 @@ if (report && informe.lines.length) {
     for (let i=1;i<=doc.getNumberOfPages();i++) {
       doc.setPage(i);
       if (i > 1) { doc.addImage(LOGO_PDF, 'JPEG', margin, 7, 8, 8); doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(22, 98, 61); doc.text('AgroNasa', margin + 10, 13); }
-      doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(100); doc.text('AgroNasa - Página '+i+' de '+doc.getNumberOfPages(), margin, 290);
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(100); doc.text(pdfText('AgroNasa - Página '+i+' de '+doc.getNumberOfPages()), margin, 290);
     }
     return doc;
   }

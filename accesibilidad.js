@@ -106,9 +106,11 @@
 
   /* ---------- Lectura en voz alta (Web Speech API del navegador) ---------- */
   const voz = ('speechSynthesis' in window) ? window.speechSynthesis : null;
+  const enIngles = () => !!window.AgroI18n && AgroI18n.idioma() === 'en';
   function vozEnEspanol() {
     if (!voz) return null;
     const voces = voz.getVoices();
+    if (enIngles()) return voces.find(v => /^en[-_]US/i.test(v.lang)) || voces.find(v => /^en/i.test(v.lang)) || null;
     return voces.find(v => /^es[-_]AR/i.test(v.lang))
       || voces.find(v => /^es[-_](419|MX|US|CL|UY|CO)/i.test(v.lang))
       || voces.find(v => /^es/i.test(v.lang))
@@ -124,10 +126,10 @@
       return;
     }
     detenerLectura();
-    const u = new SpeechSynthesisUtterance(texto);
+    const u = new SpeechSynthesisUtterance(window.AgroI18n ? AgroI18n.traducir(texto) : texto);
     const v = vozEnEspanol();
     if (v) u.voice = v;
-    u.lang = v ? v.lang : 'es-AR';
+    u.lang = v ? v.lang : (enIngles() ? 'en-US' : 'es-AR');
     u.rate = 0.95;
     u.onend = u.onerror = () => { $('detenerResumen').hidden = true; };
     $('detenerResumen').hidden = false;

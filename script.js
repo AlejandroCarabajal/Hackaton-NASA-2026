@@ -420,7 +420,7 @@ async function detectCountry(lat, lng){
   geocodeController = new AbortController();
   const badge = document.getElementById('countryBadge');
   try {
-    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=es`, { signal: geocodeController.signal });
+    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=${window.AgroI18n ? AgroI18n.idioma() : 'es'}`, { signal: geocodeController.signal });
     if(!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
     if(!data.address){
@@ -500,7 +500,7 @@ async function searchLocation(){
   searchBtn.textContent = 'Buscando...';
   searchStatus.textContent = '';
   try {
-    const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1&accept-language=es`);
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1&accept-language=${window.AgroI18n ? AgroI18n.idioma() : 'es'}`);
     if(!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
     if(data.length > 0){
@@ -543,14 +543,21 @@ let suggestTimer = null;
 let suggestAbort = null;
 let suggestItems = [];
 let suggestActive = -1;
-let regionNamesEs = null;
-try { regionNamesEs = new Intl.DisplayNames(['es'], { type: 'region' }); } catch(e){ /* navegador sin soporte */ }
+const regionNamesPorIdioma = {};
+function regionNames(){
+  const id = window.AgroI18n ? AgroI18n.idioma() : 'es';
+  if(!(id in regionNamesPorIdioma)){
+    try { regionNamesPorIdioma[id] = new Intl.DisplayNames([id], { type: 'region' }); } catch(e){ regionNamesPorIdioma[id] = null; /* navegador sin soporte */ }
+  }
+  return regionNamesPorIdioma[id];
+}
 
 function expandAliases(text){
   return SUGGEST_ALIASES.reduce((t, [re, full]) => t.replace(re, full), text);
 }
 
 function countryNameEs(props){
+  const regionNamesEs = regionNames();
   if(regionNamesEs && props.countrycode){
     try { return regionNamesEs.of(props.countrycode.toUpperCase()) || props.country; } catch(e){ /* código inválido */ }
   }

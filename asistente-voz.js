@@ -27,7 +27,37 @@
   const norm = t => String(t || '').toLowerCase()
     .normalize('NFD').replace(/[̀-ͯ]/g, '')
     .replace(/[¿?¡!.,;:"'()]/g, ' ').replace(/\s+/g, ' ').trim();
+  const I = window.AgroI18n || null;
+  const EN = () => !!I && I.idioma() === 'en';
+  const tr = s => (I ? I.traducir(s) : s);
   const dice = (t, frases) => frases.some(f => (' ' + t + ' ').includes(' ' + f + ' '));
+
+  // Comandos dichos en inglés: se pasan a las palabras que entiende el asistente
+  const COMANDOS_EN = [
+    [/\b(start over|restart|begin again|start again)\b/g, 'empezar de nuevo'],
+    [/\b(what can i say|voice options)\b/g, 'que puedo decir'], [/\bhelp\b/g, 'ayuda'],
+    [/\b(repeat|say again|say that again)\b/g, 'repetir'],
+    [/\b(finish assistant|end assistant|quit|exit|goodbye|bye|stop)\b/g, 'terminar asistente'],
+    [/\b(calculate|done|that is all|thats all|finished|finish|all set)\b/g, 'calcular'],
+    [/\b(i do not know|i dont know|dont know|no idea|unknown|not sure)\b/g, 'no se'],
+    [/\b(skip|next|nothing|none|empty)\b/g, 'saltar'],
+    [/\b(my location|where am i|current location|here)\b/g, 'mi ubicacion'],
+    [/\b(other crops?|change crop|another crop)\b/g, 'otro cultivo'],
+    [/\b(other place|another place|change place|other location|another location|change location)\b/g, 'otro lugar'],
+    [/\b(other options|alternatives|compare|strategies)\b/g, 'otras opciones'],
+    [/\b(best months|when to plant|calendar|months|when)\b/g, 'mejores meses'],
+    [/\b(what we do not know|what we dont know|limitations|unknowns)\b/g, 'limitaciones'],
+    [/\b(field data|plot data|land data|soil data|form)\b/g, 'datos del terreno'],
+    [/\b(download report|download|report|pdf)\b/g, 'pdf'],
+    [/\b(share|whatsapp)\b/g, 'whatsapp'],
+    [/\b(numbers|statistics|figures)\b/g, 'numeros'],
+    [/\b(more information|more info|details|explain)\b/g, 'detalles'],
+    [/\bsummary\b/g, 'resumen'],
+    [/\b(list|options|which ones|all)\b/g, 'lista'],
+    [/\b(yes|yeah|yep|correct|right|sure|okay|ok|exactly|affirmative|of course)\b/g, 'si'],
+    [/\b(nope|incorrect|wrong|negative|other|another|change)\b/g, 'no'],
+  ];
+  const aEspanol = t => COMANDOS_EN.reduce((x, [re, es]) => x.replace(re, es), ' ' + t + ' ').replace(/\s+/g, ' ').trim();
 
   const SI = ['si', 'correcto', 'dale', 'exacto', 'ok', 'okey', 'esta bien', 'bueno', 'afirmativo', 'claro', 'eso'];
   const NO = ['no', 'incorrecto', 'otro', 'otra', 'negativo', 'cambiar'];
@@ -41,9 +71,12 @@
     veinte:20, veintiuno:21, veintiun:21, veintidos:22, veintitres:23, veinticuatro:24, veinticinco:25, veintiseis:26,
     veintisiete:27, veintiocho:28, veintinueve:29, treinta:30, cuarenta:40, cincuenta:50, sesenta:60, setenta:70,
     ochenta:80, noventa:90, cien:100, ciento:100, doscientos:200, trescientos:300, cuatrocientos:400, quinientos:500,
-    seiscientos:600, setecientos:700, ochocientos:800, novecientos:900, mil:1000 };
+    seiscientos:600, setecientos:700, ochocientos:800, novecientos:900, mil:1000,
+    zero:0, one:1, two:2, three:3, four:4, five:5, six:6, seven:7, eight:8, nine:9, ten:10, eleven:11, twelve:12,
+    thirteen:13, fourteen:14, fifteen:15, sixteen:16, seventeen:17, eighteen:18, nineteen:19, twenty:20, thirty:30,
+    forty:40, fifty:50, sixty:60, seventy:70, eighty:80, ninety:90, hundred:100, thousand:1000 };
   function numero(t){
-    const n = norm(t).replace(/(\d) (?:coma|punto) (\d)/g, '$1.$2');
+    const n = norm(t).replace(/(\d) (?:coma|punto|point) (\d)/g, '$1.$2');
     const d = String(t).replace(/(\d),(\d)/g, '$1.$2').match(/-?\d+(\.\d+)?/) || n.match(/-?\d+(\.\d+)?/);
     if(d) return Number(d[0]);
     const convertir = s => {
@@ -51,15 +84,15 @@
       s.split(' ').forEach(w => {
         if(!(w in NUM)) return;
         hay = true;
-        total = w === 'mil' ? (total || 1) * 1000 : total + NUM[w];
+        total = (w === 'mil' || w === 'thousand') ? (total || 1) * 1000 : w === 'hundred' ? (total || 1) * 100 : total + NUM[w];
       });
       return hay ? total : null;
     };
-    const [entera, decimal] = n.split(/ (?:coma|punto) /);
+    const [entera, decimal] = n.split(/ (?:coma|punto|point) /);
     let v = convertir(entera);
     if(v === null) return null;
     if(decimal){ const dd = convertir(decimal); if(dd !== null) v = Number(`${v}.${dd}`); }
-    if(/\by medio\b/.test(n)) v += 0.5;
+    if(/\by medio\b|\band a half\b/.test(n)) v += 0.5;
     return v;
   }
 
@@ -83,8 +116,8 @@
     li.className = quien === 'asistente' ? 'msg-asistente' : 'msg-usuario';
     const q = document.createElement('span');
     q.className = 'msg-quien';
-    q.textContent = quien === 'asistente' ? 'Asistente: ' : 'Vos: ';
-    li.append(q, document.createTextNode(texto));
+    q.textContent = tr(quien === 'asistente' ? 'Asistente: ' : 'Vos: ');
+    li.append(q, document.createTextNode(quien === 'asistente' ? tr(texto) : texto));
     $('asistenteLog').appendChild(li);
     li.scrollIntoView({ block: 'nearest' });
   }
@@ -113,6 +146,7 @@
   function vozEnEspanol(){
     if(!voz) return null;
     const vs = voz.getVoices();
+    if(EN()) return vs.find(v => /^en[-_]US/i.test(v.lang)) || vs.find(v => /^en/i.test(v.lang)) || null;
     return vs.find(v => /^es[-_]AR/i.test(v.lang)) || vs.find(v => /^es[-_](419|MX|US|CL|UY|CO)/i.test(v.lang))
         || vs.find(v => /^es/i.test(v.lang)) || null;
   }
@@ -121,6 +155,7 @@
 
   function decir(texto, opciones){
     const escucharDespues = !(opciones && opciones.escuchar === false);
+    texto = tr(texto);
     A.ultimo = texto;
     registrar('asistente', texto);
     detenerEscucha();
@@ -137,7 +172,7 @@
       trozos.forEach((tr, i) => {
         const u = new SpeechSynthesisUtterance(tr);
         if(v) u.voice = v;
-        u.lang = v ? v.lang : 'es-AR';
+        u.lang = v ? v.lang : (EN() ? 'en-US' : 'es-AR');
         u.rate = 1;
         if(i === trozos.length - 1){
           u.onend = u.onerror = () => {
@@ -160,7 +195,7 @@
     if(A.sinMicrofono){ $('asistenteTexto').focus(); return; }
     detenerEscucha();
     const r = new Reconocedor();
-    r.lang = 'es-AR';
+    r.lang = EN() ? 'en-US' : 'es-AR';
     r.interimResults = false;
     r.maxAlternatives = 3;
     r.continuous = false;
@@ -228,11 +263,11 @@
   function leerEstrategias(){
     const tarjetas = [...document.querySelectorAll('#strategyGrid .strat')];
     if(!tarjetas.length) return 'Todavía no hay estrategias para comparar.';
-    return 'Comparación de cultivos, con un puntaje de 0 a 100: ' + tarjetas.map(t => {
+    return (I ? I.t('Comparación de cultivos, con un puntaje de 0 a 100:') : 'Comparación de cultivos, con un puntaje de 0 a 100:') + ' ' + tarjetas.map(t => {
       const tag = t.querySelector('.strat-tag') ? t.querySelector('.strat-tag').textContent.trim() : '';
       const cultivo = t.querySelector('.strat-crop') ? t.querySelector('.strat-crop').textContent.trim() : '';
       const pts = t.querySelector('.strat-score') ? parseInt(t.querySelector('.strat-score').textContent, 10) : '';
-      return `${tag}: ${cultivo}, ${pts} puntos.`;
+      return I ? I.t('{0}: {1}, {2} puntos.', tag, cultivo, pts) : `${tag}: ${cultivo}, ${pts} puntos.`;
     }).join(' ');
   }
   function leerNumeros(){
@@ -241,12 +276,12 @@
     return stats.map(s => {
       const et = s.querySelector('.label') ? s.querySelector('.label').textContent.trim() : '';
       const v = s.querySelector('.value') ? s.querySelector('.value').textContent.replace(/\s+/g, ' ').trim() : '';
-      return `${et}: ${v.replace(/%/g, ' por ciento').replace(/°C/g, ' grados').replace(/\bmm\b/g, ' milímetros')}.`;
+      return `${et}: ${v.replace(/%/g, tr(' por ciento')).replace(/°C/g, tr(' grados')).replace(/\bmm\b/g, tr(' milímetros'))}.`;
     }).join(' ');
   }
   function leerLimitaciones(){
     const items = [...document.querySelectorAll('#gapsList li')].slice(0, 4).map(li => li.textContent.trim());
-    return items.length ? 'Lo que este análisis no sabe: ' + items.join(' ') : 'No hay limitaciones para leer.';
+    return items.length ? tr('Lo que este análisis no sabe:') + ' ' + items.join(' ') : 'No hay limitaciones para leer.';
   }
 
   /* =================== Datos del terreno (formulario) =================== */
@@ -412,8 +447,8 @@
         const form = $('terrenoForm');
         if(form.requestSubmit) form.requestSubmit(); else form.querySelector('[type="submit"]').click();
         setTimeout(() => {
-          const res = textoPlano('terrenoResultados').replace(/^Resultados del análisis manual/, '');
-          irA('resultados', res ? 'Resultados de los datos del terreno: ' + res : 'Listo.');
+          const res = textoPlano('terrenoResultados').replace(/^(Resultados del análisis manual|Manual analysis results)/, '');
+          irA('resultados', res ? tr('Resultados de los datos del terreno:') + ' ' + res : 'Listo.');
         }, 400);
         return;
       }
@@ -437,7 +472,7 @@
 
   function procesar(alternativas){
     const original = alternativas[0];
-    const t = norm(original);
+    const t = EN() ? aEspanol(norm(original)) : norm(original);
     registrar('usuario', original);
     if(!t) return decir('No te entendí. Decilo de nuevo.');
     if(dice(t, ['empezar de nuevo', 'reiniciar', 'volver a empezar'])) return irA('lugar', 'Empecemos de nuevo.');
@@ -477,7 +512,7 @@
     A.conVoz = $('asistenteConVoz').checked;
     $('asistenteLog').setAttribute('aria-live', A.conVoz ? 'off' : 'polite');
     $('asistenteCuerpo').hidden = false;
-    $('asistenteIniciar').textContent = 'Reiniciar asistente';
+    $('asistenteIniciar').textContent = tr('Reiniciar asistente');
     $('asistenteLog').innerHTML = '';
     const modo = A.sinMicrofono
       ? 'Tu navegador no puede escucharte, así que escribí tus respuestas en el cuadro de texto y presioná Enter.'
@@ -496,7 +531,7 @@
     }
     indicador('');
     A.paso = null;
-    $('asistenteIniciar').textContent = 'Iniciar asistente por voz';
+    $('asistenteIniciar').textContent = tr('Iniciar asistente por voz');
     if(panelAbierto()) $('asistenteIniciar').focus();
   }
 
