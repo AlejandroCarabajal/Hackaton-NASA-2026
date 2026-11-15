@@ -906,3 +906,15 @@ body {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
+
+/* TEXTO DEBAJO DEL HEADER */
+
+.wrap > .sub {
+  width: 100%;
+  max-width: none;
+  box-sizing: border-box;
+  margin: 20px 0 24px;
+  line-height: 1.7;
+  text-align: justify;
+}
+
