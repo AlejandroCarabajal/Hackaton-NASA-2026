@@ -196,7 +196,11 @@
     if(raiz.nodeType === 3){ if(!omitido(raiz.parentNode)) nodoTexto(raiz); return; }
     if(raiz.nodeType !== 1 && raiz.nodeType !== 9 && raiz.nodeType !== 11) return;
     if(raiz.nodeType === 1){
-      if(omitido(raiz)) return;
+      if(omitido(raiz)){
+        // El contenido de un <textarea> es del usuario, pero su placeholder sí se traduce
+        if(raiz.nodeName === 'TEXTAREA') ATRIBUTOS.forEach(a => atributo(raiz, a));
+        return;
+      }
       ATRIBUTOS.forEach(a => atributo(raiz, a));
     }
     if(raiz.nodeType === 1 && htmlMixto(raiz)) return;
@@ -246,7 +250,7 @@
         if(m.type === 'characterData'){
           if(!omitido(m.target.parentNode)) nodoTexto(m.target);
         } else if(m.type === 'attributes'){
-          if(!omitido(m.target)) atributo(m.target, m.attributeName);
+          if(!omitido(m.target) || m.target.nodeName === 'TEXTAREA') atributo(m.target, m.attributeName);
         } else {
           m.addedNodes.forEach(n => { if(n.isConnected) recorrer(n); });
         }

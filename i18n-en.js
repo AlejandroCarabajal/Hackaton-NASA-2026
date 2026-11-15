@@ -998,6 +998,7 @@ window.I18N_EN = {
  "{0} — {1} — {2}": "{0} — {1} — {2}",
  "Ingresos y ajustes: {0} · Consumo por trabajos: {1} · Saldo: {2}": "Intakes and adjustments: {0} · Consumption by jobs: {1} · Balance: {2}",
  "{0} (saldo negativo: revisar registros)": "{0} (negative balance: check records)",
+ "Aviso: todas las imágenes de esta página son generadas por IA.": "Notice: all images on this page are AI-generated.",
  "Ojo: {0}": "Note: {0}",
  "Ojo: {0}.": "Note: {0}.",
  "FAO Crop Calendar + base de datos agronómica de referencia.": "FAO Crop Calendar + reference agronomic database.",
