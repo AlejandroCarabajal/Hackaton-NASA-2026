@@ -319,6 +319,11 @@
     indicador('');
     if(r.error) return irA('lugar', 'No se pudo hacer el análisis. ' + r.error);
     await pausa(200);
+    const resumen = $('resumenSimple');
+    if(resumen && !resumen.hidden){
+      const suave = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      resumen.scrollIntoView({ behavior: suave ? 'smooth' : 'auto', block: 'start' });
+    }
     irA('resultados', 'Análisis listo. ' + textoPlano('resumenTexto'));
   }
 
@@ -443,8 +448,31 @@
     if(fn) fn(t, alternativas, original);
   }
 
+  /* =================== Panel lateral =================== */
+  let abiertoDesde = null;     // botón que abrió el panel, para devolverle el foco al cerrar
+  const panelAbierto = () => !$('asistente').hidden;
+
+  function abrirPanel(origen){
+    abiertoDesde = origen || abiertoDesde;
+    $('asistente').hidden = false;
+    document.body.classList.add('asistente-abierto');
+    [$('asistenteAbrirHeader'), $('asistenteFlotante')].forEach(b => b && b.setAttribute('aria-expanded', 'true'));
+    // La página cambia de ancho: los gráficos se vuelven a dibujar
+    window.dispatchEvent(new Event('resize'));
+  }
+  function cerrarPanel(){
+    terminar(false);
+    $('asistente').hidden = true;
+    document.body.classList.remove('asistente-abierto');
+    [$('asistenteAbrirHeader'), $('asistenteFlotante')].forEach(b => b && b.setAttribute('aria-expanded', 'false'));
+    window.dispatchEvent(new Event('resize'));
+    if(abiertoDesde && abiertoDesde.offsetParent !== null) abiertoDesde.focus();
+    else if($('asistenteFlotante')) $('asistenteFlotante').focus();
+  }
+
   /* =================== Iniciar y terminar =================== */
   function iniciar(){
+    if(!panelAbierto()) abrirPanel();
     A.activo = true;
     A.conVoz = $('asistenteConVoz').checked;
     $('asistenteLog').setAttribute('aria-live', A.conVoz ? 'off' : 'polite');
@@ -469,7 +497,7 @@
     indicador('');
     A.paso = null;
     $('asistenteIniciar').textContent = 'Iniciar asistente por voz';
-    $('asistenteIniciar').focus();
+    if(panelAbierto()) $('asistenteIniciar').focus();
   }
 
   document.addEventListener('DOMContentLoaded', () => {
@@ -479,6 +507,19 @@
       $('asistenteConVoz').disabled = true;
     }
     $('asistenteIniciar').addEventListener('click', iniciar);
+    // "Usar con la voz" (encabezado): abre el panel y arranca la conversación de una vez
+    if($('asistenteAbrirHeader')) $('asistenteAbrirHeader').addEventListener('click', e => {
+      abrirPanel(e.currentTarget);
+      if(!A.activo) iniciar();
+      else $('asistenteHablar').focus();
+    });
+    // Botón flotante: abre el panel y deja el foco en "Iniciar" (o en "Hablar" si ya está en marcha)
+    if($('asistenteFlotante')) $('asistenteFlotante').addEventListener('click', e => {
+      abrirPanel(e.currentTarget);
+      (A.activo && !$('asistenteHablar').hidden ? $('asistenteHablar') : $('asistenteIniciar')).focus();
+    });
+    if($('asistenteCerrar')) $('asistenteCerrar').addEventListener('click', cerrarPanel);
+    [$('asistenteAbrirHeader'), $('asistenteFlotante')].forEach(b => b && b.setAttribute('aria-expanded', 'false'));
     $('asistenteTerminar').addEventListener('click', () => terminar(false));
     $('asistenteHablar').addEventListener('click', () => { if(!A.activo) return iniciar(); if(voz) voz.cancel(); escuchar(); });
     $('asistenteRepetir').addEventListener('click', () => { if(A.activo && A.ultimo) decir(A.ultimo); });
@@ -498,9 +539,12 @@
       detenerEscucha();
       procesar([texto]);
     });
-    // Escape: deja de hablar y de escuchar (sin cerrar el asistente)
+    // Escape: si el asistente habla o escucha, lo calla; si no, cierra el panel
     document.addEventListener('keydown', e => {
-      if(e.key === 'Escape' && A.activo){ if(voz) voz.cancel(); detenerEscucha(); indicador(''); }
+      if(e.key !== 'Escape' || !panelAbierto()) return;
+      const ocupado = (voz && voz.speaking) || A.escuchaActual;
+      if(ocupado){ if(voz) voz.cancel(); detenerEscucha(); indicador(''); }
+      else cerrarPanel();
     });
     if(!Reconocedor) $('asistenteHablar').hidden = true;
   });

@@ -25,6 +25,10 @@
       <img class="logo" src="imagenes/logo_nasa_agri_2.png" alt="Logo de AgroNasa">
       <div class="eyebrow"><b>NASA Space Apps Challenge · Prototipo</b> </div>
       <h1>AgroNasa</h1>
+      <div class="header-accesible">
+        <p class="sello-accesible"><span aria-hidden="true">♿</span> Accesible <span aria-hidden="true">·</span> <span aria-hidden="true">🎙</span> Con asistente por voz</p>
+        <button type="button" id="asistenteAbrirHeader" class="boton-voz-header" aria-controls="asistente">🎙 Usar con la voz</button>
+      </div>
     </div>
   </header>
 <div class="wrap" id="contenido" tabindex="-1">
@@ -33,35 +37,6 @@
 
   <p class="sub">Consulta datos climáticos reales de la <strong>API pública de NASA POWER</strong> para una parcela y compara el período reciente contra el promedio histórico (que vos configurás) y evalúa estrategias de rotación según tus prioridades.</p>
 
-  <section class="panel asistente" id="asistente" aria-labelledby="asistenteTitulo">
-    <div class="asistente-barra">
-      <div>
-        <h2 class="asistente-titulo" id="asistenteTitulo">🎙 Asistente por voz</h2>
-        <p class="asistente-desc">Te guía hablando, paso a paso: dónde está tu campo, qué querés sembrar, los resultados del análisis, los datos del terreno y el informe en PDF. Pensado para personas ciegas o con baja visión.</p>
-      </div>
-      <div class="asistente-inicio">
-        <button type="button" id="asistenteIniciar">Iniciar asistente por voz</button>
-        <label class="asistente-check"><input type="checkbox" id="asistenteConVoz" checked> El asistente habla (desmarcalo si usás un lector de pantalla)</label>
-      </div>
-    </div>
-    <div class="asistente-cuerpo" id="asistenteCuerpo" hidden>
-      <div class="asistente-estado" id="asistenteEstado" aria-hidden="true"></div>
-      <div class="asistente-log" id="asistenteLog" role="log" aria-live="off" aria-label="Conversación con el asistente" tabindex="0"></div>
-      <form class="asistente-escribir" id="asistenteForm">
-        <label for="asistenteTexto">También podés escribir tu respuesta y presionar Enter</label>
-        <div class="asistente-fila">
-          <input id="asistenteTexto" type="text" autocomplete="off">
-          <button type="submit">Enviar</button>
-        </div>
-      </form>
-      <div class="asistente-acciones">
-        <button type="button" id="asistenteHablar">🎤 Hablar</button>
-        <button type="button" id="asistenteRepetir" class="btn-ghost">🔁 Repetir</button>
-        <button type="button" id="asistenteTerminar" class="btn-ghost">Terminar asistente</button>
-      </div>
-      <p class="asistente-privacidad">El reconocimiento de voz lo hace tu navegador. En Chrome y Edge, el audio se envía a los servidores de Google o Microsoft para entenderlo. Funciona mejor en Chrome o Edge, con Live Server o https.</p>
-    </div>
-  </section>
 
   <div class="panel">
     <h2 class="panel-title">01 — Ubicación de la parcela</h2>
@@ -327,6 +302,42 @@
   <footer>AGRONASA · PROTOTIPO NO OFICIAL · DATOS EN VIVO DE NASA POWER</footer>
   <p class="ai-note"> Los datos provienen de NASA POWER y NASA GIBS; no se generó con IA ningún dato climático. Los datos del sistema deben ser validados por expertos en el tema.</p>
 </div>
+
+<!-- Asistente por voz: panel lateral y botón flotante (asistente-voz.js / asistente-voz.css) -->
+  <aside class="asistente asistente-panel" id="asistente" aria-labelledby="asistenteTitulo" hidden>
+    <div class="asistente-barra">
+      <div class="asistente-cabecera">
+        <h2 class="asistente-titulo" id="asistenteTitulo">🎙 Asistente por voz</h2>
+        <button type="button" id="asistenteCerrar" class="btn-ghost asistente-cerrar" aria-label="Cerrar el asistente por voz">✕ Cerrar</button>
+      </div>
+      <div>
+        <p class="asistente-desc">Te guía hablando, paso a paso: dónde está tu campo, qué querés sembrar, los resultados del análisis, los datos del terreno y el informe en PDF. Pensado para personas ciegas o con baja visión.</p>
+      </div>
+      <div class="asistente-inicio">
+        <button type="button" id="asistenteIniciar">Iniciar asistente por voz</button>
+        <label class="asistente-check"><input type="checkbox" id="asistenteConVoz" checked> El asistente habla (desmarcalo si usás un lector de pantalla)</label>
+      </div>
+    </div>
+    <div class="asistente-cuerpo" id="asistenteCuerpo" hidden>
+      <div class="asistente-estado" id="asistenteEstado" aria-hidden="true"></div>
+      <div class="asistente-log" id="asistenteLog" role="log" aria-live="off" aria-label="Conversación con el asistente" tabindex="0"></div>
+      <form class="asistente-escribir" id="asistenteForm">
+        <label for="asistenteTexto">También podés escribir tu respuesta y presionar Enter</label>
+        <div class="asistente-fila">
+          <input id="asistenteTexto" type="text" autocomplete="off">
+          <button type="submit">Enviar</button>
+        </div>
+      </form>
+      <div class="asistente-acciones">
+        <button type="button" id="asistenteHablar">🎤 Hablar</button>
+        <button type="button" id="asistenteRepetir" class="btn-ghost">🔁 Repetir</button>
+        <button type="button" id="asistenteTerminar" class="btn-ghost">Terminar asistente</button>
+      </div>
+      <p class="asistente-privacidad">El reconocimiento de voz lo hace tu navegador. En Chrome y Edge, el audio se envía a los servidores de Google o Microsoft para entenderlo. Funciona mejor en Chrome o Edge, con Live Server o https.</p>
+    </div>
+  </aside>
+
+  <button type="button" id="asistenteFlotante" class="asistente-flotante" aria-controls="asistente" aria-label="Abrir el asistente por voz"><span aria-hidden="true">🎙</span></button>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="script.js"></script>
