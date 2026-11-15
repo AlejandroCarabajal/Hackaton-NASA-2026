@@ -148,6 +148,9 @@ document.addEventListener('agrovista:analisis-listo', actualizarBotones);
     const suma = (a, k) => a.reduce((t, x) => t + num(x[k]), 0);
     const money = n => (window.AgroI18n && AgroI18n.idioma() === 'en') ? 'U$D ' + new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(num(n)) : new Intl.NumberFormat((window.AgroI18n ? AgroI18n.locale() : 'es-AR'), { style: 'currency', currency: (window.AgroI18n && AgroI18n.idioma() === 'en' ? 'USD' : 'ARS') }).format(num(n));
     const fmtN = (n, dec) => num(n).toLocaleString((window.AgroI18n ? AgroI18n.locale() : 'es-AR'), { maximumFractionDigits: dec });
+    const enGal = !!window.AgroI18n && AgroI18n.idioma() === 'en';
+    const vol = l => enGal ? num(l) / 3.785411784 : num(l);
+    const uVol = enGal ? ' gal' : ' L';
     const fecha = f => String(f || '').split('-').reverse().join('/') || 's/f';
     const filas = (a, fn, n) => {
       const rows = a.slice(0, 40).map(fn);
@@ -169,7 +172,7 @@ document.addEventListener('agrovista:analisis-listo', actualizarBotones);
         ['Gastos fijos', money(totalF)],
         ['Costo de trabajos', money(totalT)],
         ['Total de costos registrados', money(totalG + totalS + compras + totalF + totalT)],
-        ['Combustible disponible', fmtN(litros, 2) + ' L'],
+        ['Combustible disponible', fmtN(vol(litros), 2) + uVol],
         ['Horas trabajadas', fmtN(suma(trabajos, 'horas'), 1) + ' h']
       ] },
       { title: 'GESTIÓN AGRÍCOLA - MAQUINARIA', rows: [], table: { head: ['Máquina', 'Tipo', 'Marca / modelo', 'Año', 'Estado', 'Notas'], widths: [34, 24, 32, 12, 24, 48],
@@ -179,9 +182,9 @@ document.addEventListener('agrovista:analisis-listo', actualizarBotones);
       { title: 'GESTIÓN AGRÍCOLA - GASTOS', rows: [], table: { head: ['Fecha', 'Categoría', 'Parcela', 'Descripción', 'Importe'], widths: [20, 28, 32, 60, 34],
         body: filas(d.gastos, g => [fecha(g.fecha), g.categoria, g.parcela || 'sin parcela', g.detalle || '-', money(g.importe)], 5) } },
       { title: 'GESTIÓN AGRÍCOLA - TRABAJOS', rows: [], table: { head: ['Fecha', 'Máquina', 'Parcela / tarea', 'Horas / km', 'Ha', 'Litros', 'Costo'], widths: [20, 30, 40, 24, 12, 18, 30],
-        body: filas(trabajos, t => [fecha(t.fecha), nombreMaq(t.maquina), (t.parcela || '-') + ' / ' + (t.tarea || '-'), fmtN(t.horas, 1) + ' h / ' + fmtN(t.km, 1) + ' km', fmtN(t.ha, 2), fmtN(t.litros, 2) + ' L', money(t.costo)], 7) } },
+        body: filas(trabajos, t => [fecha(t.fecha), nombreMaq(t.maquina), (t.parcela || '-') + ' / ' + (t.tarea || '-'), fmtN(t.horas, 1) + ' h / ' + fmtN(t.km, 1) + ' km', fmtN(t.ha, 2), fmtN(vol(t.litros), 2) + uVol, money(t.costo)], 7) } },
       { title: 'GESTIÓN AGRÍCOLA - COMBUSTIBLE', rows: [], table: { head: ['Fecha', 'Tipo', 'Litros', 'Importe', 'Detalle'], widths: [22, 32, 22, 34, 64],
-        body: filas(combustible, c => [fecha(c.fecha), c.tipo || '-', fmtN(c.litros, 2) + ' L', money(c.importe), c.detalle || '-'], 5) } },
+        body: filas(combustible, c => [fecha(c.fecha), c.tipo || '-', fmtN(vol(c.litros), 2) + uVol, money(c.importe), c.detalle || '-'], 5) } },
       { title: 'GESTIÓN AGRÍCOLA - GASTOS FIJOS', rows: [], table: { head: ['Mes', 'Categoría', 'Detalle', 'Importe'], widths: [22, 40, 76, 36],
         body: filas(fijos, f => [String(f.mes || '-').split('-').reverse().join('/'), f.categoria || '-', f.detalle || '-', money(f.importe)], 4) } }
     ];
