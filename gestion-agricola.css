@@ -362,7 +362,22 @@ a:focus-visible {
   background: rgba(61, 214, 120, 0.15);
   border: 1px solid #3dd678;
 }
-.cabecera{padding-left:12px}
-.logo-cabecera{width:120px;height:120px;border-radius:50%;object-fit:cover;flex:none}
-.titulo-cabecera{margin-right:auto}
-@media(max-width:900px){.logo-cabecera{width:80px;height:80px}}
+.cabecera {
+  padding-left: 12px;
+}
+.logo-cabecera {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex: none;
+}
+.titulo-cabecera {
+  margin-right: auto;
+}
+@media (max-width: 900px) {
+  .logo-cabecera {
+    width: 80px;
+    height: 80px;
+  }
+}
