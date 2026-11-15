@@ -262,7 +262,7 @@ body.asistente-abierto .asistente-flotante {
 @media (max-width: 600px) {
   .boton-volver-arriba {
     right: 14px;
-    bottom: 86px;
+    bottom: 158px;
     width: 60px;
     height: 60px;
     font-size: 28px;
@@ -277,7 +277,7 @@ body.asistente-abierto .asistente-flotante {
 .boton-volver-arriba {
   position: fixed;
   right: 22px;
-  bottom: 102px;
+  bottom: 182px;
   z-index: 900;
 
   width: 68px;
@@ -313,8 +313,8 @@ body.asistente-abierto .asistente-flotante {
 
 @media (max-width: 600px) {
   .boton-volver-arriba {
-    right: 98px;
-    bottom: 14px;
+    right: 14px;
+    bottom: 158px;
     width: 60px;
     height: 60px;
     font-size: 28px;
