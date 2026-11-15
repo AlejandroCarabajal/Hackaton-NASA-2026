@@ -1,20 +1,23 @@
 <!doctype html>
 <html lang="es">
+
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AgroNasa — Prototipo NASA Space Apps 2026</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌱</text></svg>">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<link rel="stylesheet" href="styles.css">
-<link rel="stylesheet" href="tema.css">
-<link rel="stylesheet" href="accesibilidad.css">
-<link rel="stylesheet" href="asistente-voz.css">
-<script src="tema.js"></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AgroNasa — Prototipo NASA Space Apps 2026</title>
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌱</text></svg>">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="tema.css">
+  <link rel="stylesheet" href="accesibilidad.css">
+  <link rel="stylesheet" href="asistente-voz.css">
+  <script src="tema.js"></script>
 </head>
+
 <body>
   <a class="saltar" href="#contenido">Saltar al contenido</a>
-  
+
   <header>
     <div class="tema-selector" role="group" aria-label="Contraste de la pantalla">
       <button type="button" data-tema-opcion="oscuro" aria-pressed="true">Oscuro</button>
@@ -26,301 +29,401 @@
       <div class="eyebrow"><b>NASA Space Apps Challenge · Prototipo</b> </div>
       <h1>AgroNasa</h1>
       <div class="header-accesible">
-        <p class="sello-accesible"><span aria-hidden="true">♿</span> Accesible <span aria-hidden="true">·</span> <span aria-hidden="true">🎙</span> Con asistente por voz</p>
-        <button type="button" id="asistenteAbrirHeader" class="boton-voz-header" aria-controls="asistente">🎙 Usar con la voz</button>
+        <p class="sello-accesible"><span aria-hidden="true">♿</span> Accesible <span aria-hidden="true">·</span> <span
+            aria-hidden="true">🎙</span> Con asistente por voz</p>
+        <button type="button" id="asistenteAbrirHeader" class="boton-voz-header" aria-controls="asistente">🎙 Usar con
+          la voz</button>
       </div>
     </div>
   </header>
-<div class="wrap" id="contenido" tabindex="-1">
+  <div class="wrap" id="contenido" tabindex="-1">
 
 
 
-  <p class="sub">Consulta datos climáticos reales de la <strong>API pública de NASA POWER</strong> para una parcela y compara el período reciente contra el promedio histórico (que vos configurás) y evalúa estrategias de rotación según tus prioridades.</p>
+    <p class="sub">Consulta datos climáticos reales de la <strong>API pública de NASA POWER</strong> para una parcela y
+      compara el período reciente contra el promedio histórico (que vos configurás) y evalúa estrategias de rotación
+      según tus prioridades.</p>
 
 
-  <div class="panel">
-    <h2 class="panel-title">01 — Ubicación de la parcela</h2>
+    <div class="panel">
+      <h2 class="panel-title">01 — Ubicación de la parcela</h2>
 
-    <div class="search-bar">
-      <div class="search-field">
-        <input id="searchInput" type="text" placeholder="Buscar localidad, provincia/estado o país..." autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="searchSuggestions" />
-        <ul id="searchSuggestions" class="search-suggestions" role="listbox" hidden></ul>
+      <div class="search-bar">
+        <div class="search-field">
+          <input id="searchInput" type="text" placeholder="Buscar localidad, provincia/estado o país..."
+            autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false"
+            aria-controls="searchSuggestions" />
+          <ul id="searchSuggestions" class="search-suggestions" role="listbox" hidden></ul>
+        </div>
+        <button id="searchBtn">Buscar</button>
+        <button id="miUbicacion" type="button" class="btn-ghost">📍 Usar mi ubicación</button>
       </div>
-      <button id="searchBtn">Buscar</button>
-      <button id="miUbicacion" type="button" class="btn-ghost">📍 Usar mi ubicación</button>
-    </div>
-    <div class="search-status" id="searchStatus" role="status"></div>
+      <div class="search-status" id="searchStatus" role="status"></div>
 
-    <div class="layer-bar">
-      <label for="gibsLayer">Capa satelital NASA (referencia visual)</label>
-      <select id="gibsLayer">
-        <option value="">Sin capa (solo imagen base)</option>
-        <option value="ndvi">Vegetación — NDVI (MODIS)</option>
-        <option value="smap">Humedad del suelo (SMAP)</option>
-        <option value="imerg">Precipitación (GPM IMERG)</option>
-        <option value="lst">Temperatura superficial (MODIS)</option>
-      </select>
-    </div>
-    <div id="map"></div>
-    <div class="layer-note" id="baseImageNote"></div>
-    <div class="layer-note" id="gibsNote"></div>
-
-    <div class="country-badge" id="countryBadge">Seleccioná un punto en el mapa</div>
-
-    <div class="row" style="margin-top:12px;">
-      <div class="field">
-        <label for="locationName">Ubicación seleccionada</label>
-        <input id="locationName" type="text" value="Buenos Aires, AR" readonly style="cursor:default;" />
-      </div>
-      <div class="field">
-        <label for="lat">Latitud</label>
-        <input id="lat" type="number" step="0.0001" value="-34.6037" />
-      </div>
-      <div class="field">
-        <label for="lon">Longitud</label>
-        <input id="lon" type="number" step="0.0001" value="-58.3816" />
-      </div>
-    </div>
-
-    <details class="source-box"><summary>Fuente</summary><div class="source-box-body">OpenStreetMap Nominatim y Photon (geocodificación y sugerencias de búsqueda), Esri World Imagery (base), capas opcionales de NASA GIBS (SMAP, GPM IMERG, MODIS)</div></details>
-  </div>
-
-  <div class="panel">
-    <h2 class="panel-title">02 — Cultivo</h2>
-    <div class="row">
-      <div class="field">
-        <label for="crop">Cultivo que querés sembrar</label>
-        <select id="crop">
-          <option value="">Elegí una ubicación primero</option>
+      <div class="layer-bar">
+        <label for="gibsLayer">Capa satelital NASA (referencia visual)</label>
+        <select id="gibsLayer">
+          <option value="">Sin capa (solo imagen base)</option>
+          <option value="ndvi">Vegetación — NDVI (MODIS)</option>
+          <option value="smap">Humedad del suelo (SMAP)</option>
+          <option value="imerg">Precipitación (GPM IMERG)</option>
+          <option value="lst">Temperatura superficial (MODIS)</option>
         </select>
       </div>
-      <div class="field">
-        <label for="prevCrop">Cultivo anterior en esta parcela (opcional)</label>
-        <select id="prevCrop">
-          <option value="ninguno">No sé / barbecho</option>
-        </select>
+      <div id="map"></div>
+      <div class="layer-note" id="baseImageNote"></div>
+      <div class="layer-note" id="gibsNote"></div>
+
+      <div class="country-badge" id="countryBadge">Seleccioná un punto en el mapa</div>
+
+      <div class="row" style="margin-top:12px;">
+        <div class="field">
+          <label for="locationName">Ubicación seleccionada</label>
+          <input id="locationName" type="text" value="Buenos Aires, AR" readonly style="cursor:default;" />
+        </div>
+        <div class="field">
+          <label for="lat">Latitud</label>
+          <input id="lat" type="number" step="0.0001" value="-34.6037" />
+        </div>
+        <div class="field">
+          <label for="lon">Longitud</label>
+          <input id="lon" type="number" step="0.0001" value="-58.3816" />
+        </div>
       </div>
+
+      <details class="source-box">
+        <summary>Fuente</summary>
+        <div class="source-box-body">OpenStreetMap Nominatim y Photon (geocodificación y sugerencias de búsqueda), Esri
+          World Imagery (base), capas opcionales de NASA GIBS (SMAP, GPM IMERG, MODIS)</div>
+      </details>
     </div>
-    <div class="row" style="margin-top:14px;">
-      <div class="field">
-        <label for="cropDuration">Duración del cultivo</label>
-        <input id="cropDuration" type="text" value="—" readonly style="cursor:default;" />
+
+    <div class="panel">
+      <h2 class="panel-title">02 — Cultivo</h2>
+      <div class="row">
+        <div class="field">
+          <label for="crop">Cultivo que querés sembrar</label>
+          <select id="crop">
+            <option value="">Elegí una ubicación primero</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="prevCrop">Cultivo anterior en esta parcela (opcional)</label>
+          <select id="prevCrop">
+            <option value="ninguno">No sé / barbecho</option>
+          </select>
+        </div>
       </div>
-      <div class="field">
-        <label for="startDate">Fecha de inicio</label>
-        <input id="startDate" type="date" />
+      <div class="row" style="margin-top:14px;">
+        <div class="field">
+          <label for="cropDuration">Duración del cultivo</label>
+          <input id="cropDuration" type="text" value="—" readonly style="cursor:default;" />
+        </div>
+        <div class="field">
+          <label for="startDate">Fecha de inicio</label>
+          <input id="startDate" type="date" />
+        </div>
+        <div class="field">
+          <label for="endDate">Fecha de finalización (dd/mm/yyyy)</label>
+          <input id="endDate" type="text" value="—" readonly style="cursor:default;" />
+        </div>
       </div>
-      <div class="field">
-        <label for="endDate">Fecha de finalización (dd/mm/yyyy)</label>
-        <input id="endDate" type="text" value="—" readonly style="cursor:default;" />
-      </div>
+      <details class="source-box">
+        <summary>Fuente</summary>
+        <div class="source-box-body">FAO Crop Calendar + base de datos agronómica de referencia. Duraciones típicas
+          orientativas; varían según variedad, clima y manejo.</div>
+      </details>
     </div>
-    <details class="source-box"><summary>Fuente</summary><div class="source-box-body">FAO Crop Calendar + base de datos agronómica de referencia. Duraciones típicas orientativas; varían según variedad, clima y manejo.</div></details>
-  </div>
 
-  <div class="panel">
-    <h2 class="panel-title">03 — Prioridades y escenario</h2>
-    <div class="row">
-      <div class="field">
-        <label for="priority">¿Qué priorizás?</label>
-        <select id="priority">
-          <option value="equilibrado">Equilibrado</option>
-          <option value="agua">Ahorrar agua</option>
-          <option value="suelo">Mejorar la estructura y fertilidad del suelo</option>
-          <option value="erosion">Reducir la erosión</option>
-          <option value="ingreso" disabled>Ingreso extra — próximamente (requiere datos de mercado)</option>
-        </select>
+    <div class="panel">
+      <h2 class="panel-title">03 — Prioridades y escenario</h2>
+      <div class="row">
+        <div class="field">
+          <label for="priority">¿Qué priorizás?</label>
+          <select id="priority">
+            <option value="equilibrado">Equilibrado</option>
+            <option value="agua">Ahorrar agua</option>
+            <option value="suelo">Mejorar la estructura y fertilidad del suelo</option>
+            <option value="erosion">Reducir la erosión</option>
+            <option value="ingreso" disabled>Ingreso extra — próximamente (requiere datos de mercado)</option>
+          </select>
+        </div>
       </div>
-    </div>
-    <div class="row" style="margin-top:14px;">
-      <div class="field">
-        <label for="climYears">Año/s del promedio histórico</label>
-        <input id="climYears" type="text" inputmode="numeric" maxlength="2" value="2" autocomplete="off" aria-describedby="climHelp" />
+      <div class="row" style="margin-top:14px;">
+        <div class="field">
+          <label for="climYears">Año/s del promedio histórico</label>
+          <input id="climYears" type="text" inputmode="numeric" maxlength="2" value="2" autocomplete="off"
+            aria-describedby="climHelp" />
+        </div>
+        <div class="field">
+          <label for="climMonths">Mes/es del promedio histórico</label>
+          <input id="climMonths" type="text" inputmode="numeric" maxlength="2" value="0" autocomplete="off"
+            aria-describedby="climHelp" />
+        </div>
+        <div class="field">
+          <label for="windowDays">Período reciente a comparar</label>
+          <select id="windowDays">
+            <option value="7">Últimos 7 días</option>
+            <option value="14" selected>Últimos 14 días</option>
+            <option value="21">Últimos 21 días</option>
+            <option value="30">Últimos 30 días</option>
+          </select>
+        </div>
       </div>
-      <div class="field">
-        <label for="climMonths">Mes/es del promedio histórico</label>
-        <input id="climMonths" type="text" inputmode="numeric" maxlength="2" value="0" autocomplete="off" aria-describedby="climHelp" />
+      <small id="climHelp" class="field-help" role="status" aria-live="polite"></small>
+      <div class="row" style="margin-top:14px;">
+        <div class="field">
+          <label for="rainAdj">Escenario de lluvia: <b id="rainAdjVal">0%</b></label>
+          <input id="rainAdj" type="range" min="-40" max="40" step="5" value="0" />
+        </div>
+        <div class="field">
+          <label for="tempAdj">Escenario de temperatura: <b id="tempAdjVal">0 °C</b></label>
+          <input id="tempAdj" type="range" min="-3" max="4" step="0.5" value="0" />
+        </div>
+        <button id="resetScenario" type="button" class="btn-ghost">Restablecer</button>
       </div>
-      <div class="field">
-        <label for="windowDays">Período reciente a comparar</label>
-        <select id="windowDays">
-          <option value="7">Últimos 7 días</option>
-          <option value="14" selected>Últimos 14 días</option>
-          <option value="21">Últimos 21 días</option>
-          <option value="30">Últimos 30 días</option>
-        </select>
+      <div class="source">Las prioridades reordenan la comparación de estrategias. Más años dan un promedio más estable;
+        menos años reflejan mejor el clima reciente. Al cambiar los años, los meses o el período reciente se recalcula
+        el análisis; cuando hacen falta datos adicionales, se consulta nuevamente NASA POWER. Los deslizadores aplican
+        un ajuste simple sobre las condiciones actuales (no es un pronóstico). Se actualizan sin volver a consultar NASA
+        POWER.</div>
+    </div>
+
+    <button id="run" style="width:100%;margin:0 0 16px;">Analizar parcela</button>
+    <div class="status" id="status" role="status" aria-live="polite" style="margin-bottom:16px;"></div>
+
+    <section class="panel resumen-simple" id="resumenSimple" aria-labelledby="resumenTitulo" hidden>
+      <h2 class="panel-title" id="resumenTitulo">Resumen en palabras simples</h2>
+      <p class="resumen-texto" id="resumenTexto"></p>
+      <div class="resumen-acciones">
+        <button type="button" id="escucharResumen">🔊 Escuchar resumen</button>
+        <button type="button" id="detenerResumen" class="btn-ghost" hidden>⏹ Detener</button>
       </div>
-    </div>
-    <small id="climHelp" class="field-help" role="status" aria-live="polite"></small>
-    <div class="row" style="margin-top:14px;">
-      <div class="field">
-        <label for="rainAdj">Escenario de lluvia: <b id="rainAdjVal">0%</b></label>
-        <input id="rainAdj" type="range" min="-40" max="40" step="5" value="0" />
+      <p class="resumen-nota" id="resumenNota"></p>
+    </section>
+
+    <div class="panel" id="resultPanel" style="display:none;">
+      <h2 class="panel-title">04 — Estado hídrico general</h2>
+      <div class="semaforo">
+        <div class="dot" id="dot">--</div>
+        <div class="verdict-text" id="verdictText"></div>
       </div>
-      <div class="field">
-        <label for="tempAdj">Escenario de temperatura: <b id="tempAdjVal">0 °C</b></label>
-        <input id="tempAdj" type="range" min="-3" max="4" step="0.5" value="0" />
+      <details class="source-box">
+        <summary>Fuente</summary>
+        <div class="source-box-body">NASA POWER (precipitación, temperatura, humedad) comparado con la climatología de
+          <span class="clim-span">10 años</span></div>
+      </details>
+    </div>
+
+    <div class="panel" id="statsPanel" style="display:none;">
+      <h2 class="panel-title">05 — Últimos <span class="win-days">14</span> días vs. climatología (promedio de <span
+          class="clim-span">10 años</span>)</h2>
+      <div class="grid" id="statsGrid"></div>
+      <details class="source-box">
+        <summary>Fuente</summary>
+        <div class="source-box-body">NASA POWER API (datos diarios, AG community). Promedio histórico: mismo período
+          calendario en los años elegidos. Heladas: T mín ≤ 2 °C. Calor extremo: T máx ≥ 35 °C</div>
+      </details>
+    </div>
+
+    <div class="panel" id="cropPanel" style="display:none;">
+      <h2 class="panel-title">06 — Recomendación para tu cultivo</h2>
+      <div class="semaforo">
+        <div class="dot" id="cropDot">--</div>
+        <div class="verdict-text" id="cropVerdictText"></div>
       </div>
-      <button id="resetScenario" type="button" class="btn-ghost">Restablecer</button>
+      <div id="cropChecklist" style="margin-top:16px;"></div>
+      <div id="rotationNote" style="margin-top:14px;"></div>
+      <details class="source-box">
+        <summary>Fuente</summary>
+        <div class="source-box-body">FAO + rangos agronómicos de referencia. Temperaturas de siembra, germinación y
+          cardinales de maíz, soja, alfalfa y sorgo: INTA y bibliografía agrometeorológica, según los cuadros del equipo
+          (no reemplaza asesoramiento profesional)</div>
+      </details>
     </div>
-    <div class="source">Las prioridades reordenan la comparación de estrategias. Más años dan un promedio más estable; menos años reflejan mejor el clima reciente. Al cambiar los años, los meses o el período reciente se recalcula el análisis; cuando hacen falta datos adicionales, se consulta nuevamente NASA POWER. Los deslizadores aplican un ajuste simple sobre las condiciones actuales (no es un pronóstico). Se actualizan sin volver a consultar NASA POWER.</div>
-  </div>
 
-  <button id="run" style="width:100%;margin:0 0 16px;">Analizar parcela</button>
-  <div class="status" id="status" role="status" aria-live="polite" style="margin-bottom:16px;"></div>
-
-  <section class="panel resumen-simple" id="resumenSimple" aria-labelledby="resumenTitulo" hidden>
-    <h2 class="panel-title" id="resumenTitulo">Resumen en palabras simples</h2>
-    <p class="resumen-texto" id="resumenTexto"></p>
-    <div class="resumen-acciones">
-      <button type="button" id="escucharResumen">🔊 Escuchar resumen</button>
-      <button type="button" id="detenerResumen" class="btn-ghost" hidden>⏹ Detener</button>
+    <div class="panel" id="strategyPanel" style="display:none;">
+      <h2 class="panel-title">07 — Comparación de estrategias de rotación</h2>
+      <div class="strategy-note" id="strategyNote"></div>
+      <div class="strategy-grid" id="strategyGrid"></div>
+      <div class="source">Puntaje 0–100 = clima actual + rotación + demanda de agua + suelo + erosión, ponderado según
+        tu prioridad. Es una guía para explorar opciones, no reemplaza el criterio del agricultor ni de un agrónomo
+        local.</div>
     </div>
-    <p class="resumen-nota" id="resumenNota"></p>
-  </section>
 
-  <div class="panel" id="resultPanel" style="display:none;">
-    <h2 class="panel-title">04 — Estado hídrico general</h2>
-    <div class="semaforo">
-      <div class="dot" id="dot">--</div>
-      <div class="verdict-text" id="verdictText"></div>
-    </div>
-    <details class="source-box"><summary>Fuente</summary><div class="source-box-body">NASA POWER (precipitación, temperatura, humedad) comparado con la climatología de <span class="clim-span">10 años</span></div></details>
-  </div>
-
-  <div class="panel" id="statsPanel" style="display:none;">
-    <h2 class="panel-title">05 — Últimos <span class="win-days">14</span> días vs. climatología (promedio de <span class="clim-span">10 años</span>)</h2>
-    <div class="grid" id="statsGrid"></div>
-    <details class="source-box"><summary>Fuente</summary><div class="source-box-body">NASA POWER API (datos diarios, AG community). Promedio histórico: mismo período calendario en los años elegidos. Heladas: T mín ≤ 2 °C. Calor extremo: T máx ≥ 35 °C</div></details>
-  </div>
-
-  <div class="panel" id="cropPanel" style="display:none;">
-    <h2 class="panel-title">06 — Recomendación para tu cultivo</h2>
-    <div class="semaforo">
-      <div class="dot" id="cropDot">--</div>
-      <div class="verdict-text" id="cropVerdictText"></div>
-    </div>
-    <div id="cropChecklist" style="margin-top:16px;"></div>
-    <div id="rotationNote" style="margin-top:14px;"></div>
-    <details class="source-box"><summary>Fuente</summary><div class="source-box-body">FAO + rangos agronómicos de referencia. Temperaturas de siembra, germinación y cardinales de maíz, soja, alfalfa y sorgo: INTA y bibliografía agrometeorológica, según los cuadros del equipo (no reemplaza asesoramiento profesional)</div></details>
-  </div>
-
-  <div class="panel" id="strategyPanel" style="display:none;">
-    <h2 class="panel-title">07 — Comparación de estrategias de rotación</h2>
-    <div class="strategy-note" id="strategyNote"></div>
-    <div class="strategy-grid" id="strategyGrid"></div>
-    <div class="source">Puntaje 0–100 = clima actual + rotación + demanda de agua + suelo + erosión, ponderado según tu prioridad. Es una guía para explorar opciones, no reemplaza el criterio del agricultor ni de un agrónomo local.</div>
-  </div>
-
-  <div class="panel" id="annualPanel" style="display:none;">
-    <h2 class="panel-title">08 — Calendario climático anual (promedio de <span class="clim-span">10 años</span>)</h2>
-    <div class="chart-wrap"><svg id="annualChart" width="800" height="270" viewBox="0 0 800 270"></svg></div>
-    <div class="annual-legend">
-      <span><i style="background:var(--lluvia, #4aa3df)"></i>Lluvia mensual (mm)</span>
-      <span><i style="background:var(--amber)"></i>Temperatura media (°C)</span>
-      <span><i style="background:var(--leaf);opacity:.4"></i>Rango de temperatura del cultivo</span>
-      <span><i class="dotleg" style="background:var(--leaf)"></i>Favorable</span>
-      <span><i class="dotleg" style="background:var(--amber)"></i>Poca lluvia</span>
-      <span><i class="dotleg" style="background:var(--red)"></i>Temperatura fuera de rango</span>
-    </div>
-    <div class="verdict-text annual-note" id="annualNote"></div>
-    <details class="source-box"><summary>Fuente</summary><div class="source-box-body">NASA POWER API (PRECTOTCORR, T2M, T2M_MIN), promedio de años completos</div></details>
-  </div>
-
-  <div class="panel" id="chartPanel" style="display:none;">
-    <h2 class="panel-title">09 — Precipitación diaria (mm) — últimos <span class="win-days">14</span> días</h2>
-    <div class="chart-wrap"><svg id="chart" width="800" height="220" viewBox="0 0 800 220"></svg></div>
-    <details class="source-box"><summary>Fuente</summary><div class="source-box-body">NASA POWER API (PRECTOTCORR)</div></details>
-  </div>
-
-  <div class="panel" id="gapsPanel" style="display:none;">
-    <h2 class="panel-title">10 — Qué no sabemos y dónde se necesita criterio local</h2>
-    <ul class="gaps-list" id="gapsList"></ul>
-  </div>
-
-
-  <section class="panel terreno-panel" id="terrenoPanel" style="display:none;">
-    <h2 class="panel-title">Datos del terreno · ingreso manual</h2>
-    <p>Completá los datos que conocés de tu parcela. Los campos son opcionales; las mediciones de laboratorio ofrecen resultados más confiables.</p>
-    <form id="terrenoForm">
-      <div class="terreno-grid">
-        <div class="field"><label for="terrenoNombre">Nombre de la parcela</label><input id="terrenoNombre" maxlength="80" placeholder="Ej.: Lote norte"></div>
-        <div class="field"><label for="terrenoSuperficie">Superficie (hectáreas)</label><input id="terrenoSuperficie" type="number" min="0" step="any" placeholder="Ej.: 5"></div>
-        <div class="field"><label for="terrenoTextura">Textura del suelo</label><select id="terrenoTextura"><option value="">No informado</option><option value="arenoso">Arenoso</option><option value="franco">Franco</option><option value="arcilloso">Arcilloso</option><option value="limoso">Limoso</option></select></div>
-        <div class="field"><label for="terrenoPh">pH medido del suelo (0–14)</label><input id="terrenoPh" type="number" min="0" max="14" step="0.1" placeholder="Ej.: 6.5"></div>
-        <div class="field"><label for="terrenoN">Nitrógeno (ppm)</label><input id="terrenoN" type="number" min="0" step="any" placeholder="Análisis de suelo"></div>
-        <div class="field"><label for="terrenoP">Fósforo (ppm)</label><input id="terrenoP" type="number" min="0" step="any" placeholder="Análisis de suelo"></div>
-        <div class="field"><label for="terrenoK">Potasio (ppm)</label><input id="terrenoK" type="number" min="0" step="any" placeholder="Análisis de suelo"></div>
-        <div class="field"><label for="terrenoRiego">Sistema de riego</label><select id="terrenoRiego"><option value="">No informado</option><option value="sin">Sin riego</option><option value="goteo">Goteo</option><option value="aspersion">Aspersión</option><option value="surcos">Surcos</option><option value="otro">Otro</option></select></div>
-        <div class="field"><label for="terrenoLamina">Agua aplicada por riego (mm por evento)</label><input id="terrenoLamina" type="number" min="0" step="any" placeholder="Ej.: 20"></div>
-        <div class="field"><label for="terrenoFrecuencia">Intervalo entre riegos (días)</label><input id="terrenoFrecuencia" type="number" min="1" step="1" placeholder="Ej.: 3"></div>
-        <div class="field"><label for="terrenoRendimiento">Rendimiento esperado (toneladas/ha)</label><input id="terrenoRendimiento" type="number" min="0" step="any" placeholder="Ej.: 7.5"></div>
-        <div class="field"><label for="terrenoPlagas">Plagas o enfermedades observadas</label><input id="terrenoPlagas" maxlength="180" placeholder="Ej.: roya; o dejar vacío"></div>
-        <div class="field terreno-ancho"><label for="terrenoNotas">Observaciones sobre fertilización, erosión y manejo</label><textarea id="terrenoNotas" rows="3" maxlength="1000" placeholder="Anotá las características que consideres importantes"></textarea></div>
+    <div class="panel" id="annualPanel" style="display:none;">
+      <h2 class="panel-title">08 — Calendario climático anual (promedio de <span class="clim-span">10 años</span>)</h2>
+      <div class="chart-wrap"><svg id="annualChart" width="800" height="270" viewBox="0 0 800 270"></svg></div>
+      <div class="annual-legend">
+        <span><i style="background:var(--lluvia, #4aa3df)"></i>Lluvia mensual (mm)</span>
+        <span><i style="background:var(--amber)"></i>Temperatura media (°C)</span>
+        <span><i style="background:var(--leaf);opacity:.4"></i>Rango de temperatura del cultivo</span>
+        <span><i class="dotleg" style="background:var(--leaf)"></i>Favorable</span>
+        <span><i class="dotleg" style="background:var(--amber)"></i>Poca lluvia</span>
+        <span><i class="dotleg" style="background:var(--red)"></i>Temperatura fuera de rango</span>
       </div>
-      <div class="terreno-actions"><button type="submit">Calcular análisis personalizado</button><button id="terrenoGuardar" type="button" class="btn-ghost">Guardar en este navegador</button><button id="terrenoLimpiar" type="button" class="btn-ghost">Limpiar</button><button id="terrenoPdf" type="button" class="btn-ghost" disabled>Descargar análisis en PDF</button><button id="terrenoWhatsapp" type="button" class="btn-ghost" disabled>Compartir por WhatsApp</button></div>
-    </form>
-    <p id="terrenoMensaje" class="source" role="status" aria-live="polite"></p>
-    <div id="terrenoResultados" class="terreno-resultados" hidden aria-live="polite"></div>
-    <div class="source">Las estimaciones son orientativas: el pH se describe de forma general, no por cultivo; los nutrientes se registran sin diagnosticarlos porque sus rangos dependen del método de laboratorio y el cultivo. La producción estimada no es una predicción. Los datos se guardan únicamente en este navegador cuando elegís guardar.</div>
-  </section>
+      <div class="verdict-text annual-note" id="annualNote"></div>
+      <details class="source-box">
+        <summary>Fuente</summary>
+        <div class="source-box-body">NASA POWER API (PRECTOTCORR, T2M, T2M_MIN), promedio de años completos</div>
+      </details>
+    </div>
 
-<section class="panel gestion-acceso" id="gestionAgricola">
-  <h2> GESTIÓN AGRÍCOLA</h2>
+    <div class="panel" id="chartPanel" style="display:none;">
+      <h2 class="panel-title">09 — Precipitación diaria (mm) — últimos <span class="win-days">14</span> días</h2>
+      <div class="chart-wrap"><svg id="chart" width="800" height="220" viewBox="0 0 800 220"></svg></div>
+      <details class="source-box">
+        <summary>Fuente</summary>
+        <div class="source-box-body">NASA POWER API (PRECTOTCORR)</div>
+      </details>
+    </div>
 
-  <p>
-    Administrá los recursos de tu establecimiento agrícola.
-    Registrá maquinaria, mantenimientos y gastos de producción.
-  </p>
-  <div class="gestion-acceso-contenido">
+    <div class="panel" id="gapsPanel" style="display:none;">
+      <h2 class="panel-title">10 — Qué no sabemos y dónde se necesita criterio local</h2>
+      <ul class="gaps-list" id="gapsList"></ul>
+    </div>
+
+
+    <section class="panel terreno-panel" id="terrenoPanel" style="display:none;">
+      <h2 class="panel-title">Datos del terreno · ingreso manual</h2>
+      <p>Completá los datos que conocés de tu parcela. Los campos son opcionales; las mediciones de laboratorio ofrecen
+        resultados más confiables.</p>
+      <form id="terrenoForm">
+        <div class="terreno-grid">
+          <div class="field"><label for="terrenoNombre">Nombre de la parcela</label><input id="terrenoNombre"
+              maxlength="80" placeholder="Ej.: Lote norte"></div>
+          <div class="field"><label for="terrenoSuperficie">Superficie (hectáreas)</label><input id="terrenoSuperficie"
+              type="number" min="0" step="any" placeholder="Ej.: 5"></div>
+          <div class="field"><label for="terrenoTextura">Textura del suelo</label><select id="terrenoTextura">
+              <option value="">No informado</option>
+              <option value="arenoso">Arenoso</option>
+              <option value="franco">Franco</option>
+              <option value="arcilloso">Arcilloso</option>
+              <option value="limoso">Limoso</option>
+            </select></div>
+          <div class="field"><label for="terrenoPh">pH medido del suelo (0–14)</label><input id="terrenoPh"
+              type="number" min="0" max="14" step="0.1" placeholder="Ej.: 6.5"></div>
+          <div class="field"><label for="terrenoN">Nitrógeno (ppm)</label><input id="terrenoN" type="number" min="0"
+              step="any" placeholder="Análisis de suelo"></div>
+          <div class="field"><label for="terrenoP">Fósforo (ppm)</label><input id="terrenoP" type="number" min="0"
+              step="any" placeholder="Análisis de suelo"></div>
+          <div class="field"><label for="terrenoK">Potasio (ppm)</label><input id="terrenoK" type="number" min="0"
+              step="any" placeholder="Análisis de suelo"></div>
+          <div class="field"><label for="terrenoRiego">Sistema de riego</label><select id="terrenoRiego">
+              <option value="">No informado</option>
+              <option value="sin">Sin riego</option>
+              <option value="goteo">Goteo</option>
+              <option value="aspersion">Aspersión</option>
+              <option value="surcos">Surcos</option>
+              <option value="otro">Otro</option>
+            </select></div>
+          <div class="field"><label for="terrenoLamina">Agua aplicada por riego (mm por evento)</label><input
+              id="terrenoLamina" type="number" min="0" step="any" placeholder="Ej.: 20"></div>
+          <div class="field"><label for="terrenoFrecuencia">Intervalo entre riegos (días)</label><input
+              id="terrenoFrecuencia" type="number" min="1" step="1" placeholder="Ej.: 3"></div>
+          <div class="field"><label for="terrenoRendimiento">Rendimiento esperado (toneladas/ha)</label><input
+              id="terrenoRendimiento" type="number" min="0" step="any" placeholder="Ej.: 7.5"></div>
+          <div class="field"><label for="terrenoPlagas">Plagas o enfermedades observadas</label><input
+              id="terrenoPlagas" maxlength="180" placeholder="Ej.: roya; o dejar vacío"></div>
+          <div class="field terreno-ancho"><label for="terrenoNotas">Observaciones sobre fertilización, erosión y
+              manejo</label><textarea id="terrenoNotas" rows="3" maxlength="1000"
+              placeholder="Anotá las características que consideres importantes"></textarea></div>
+        </div>
+        <div class="terreno-actions"><button type="submit">Calcular análisis personalizado</button><button
+            id="terrenoGuardar" type="button" class="btn-ghost">Guardar en este navegador</button><button
+            id="terrenoLimpiar" type="button" class="btn-ghost">Limpiar</button><button id="terrenoPdf" type="button"
+            class="btn-ghost" disabled>Descargar análisis en PDF</button><button id="terrenoWhatsapp" type="button"
+            class="btn-ghost" disabled>Compartir por WhatsApp</button></div>
+      </form>
+      <p id="terrenoMensaje" class="source" role="status" aria-live="polite"></p>
+      <div id="terrenoResultados" class="terreno-resultados" hidden aria-live="polite"></div>
+      <div class="source">Las estimaciones son orientativas: el pH se describe de forma general, no por cultivo; los
+        nutrientes se registran sin diagnosticarlos porque sus rangos dependen del método de laboratorio y el cultivo.
+        La producción estimada no es una predicción. Los datos se guardan únicamente en este navegador cuando elegís
+        guardar.</div>
+    </section>
+
+    <section class="panel gestion-acceso" id="gestionAgricola">
+      <h2> GESTIÓN AGRÍCOLA</h2>
+
+      <p>
+        Administrá los recursos de tu establecimiento agrícola.
+        Registrá maquinaria, mantenimientos y gastos de producción.
+      </p>
+      <div class="gestion-acceso-contenido">
+      </div>
+
+      <a href="./gestion-agricola.html" class="gestion-acceso-boton">
+        Ingresar a Gestión Agrícola
+      </a>
+    </section>
+
+
+    <details class="panel glossary">
+      <summary>Glosario: términos científicos</summary>
+      <dl>
+        <dt>Evapotranspiración</dt>
+        <dd>Agua que pasa del suelo y de las plantas a la atmósfera. A mayor calor y viento, mayor demanda de agua del
+          cultivo.</dd>
+        <dt>Humedad de suelo (zona de raíces)</dt>
+        <dd>Proporción de agua disponible en el suelo donde llegan las raíces (0–100%). NASA POWER la modela; SMAP la
+          mide por satélite en la capa superficial.</dd>
+        <dt>Anomalía</dt>
+        <dd>Diferencia entre lo observado y lo normal para esa época. Una anomalía de −40% en lluvia significa que
+          llovió 40% menos que el promedio.</dd>
+        <dt>Percentil</dt>
+        <dd>Posición del valor actual entre los años anteriores. Percentil 10 = solo 1 de cada 10 años tuvo menos
+          lluvia.</dd>
+        <dt>NDVI</dt>
+        <dd>Índice de vegetación (de −1 a 1) calculado con imágenes satelitales: valores altos indican vegetación densa
+          y vigorosa.</dd>
+        <dt>Riesgo de helada</dt>
+        <dd>Temperaturas mínimas del aire de 2 °C o menos, que pueden dañar cultivos sensibles.</dd>
+        <dt>Balance hídrico</dt>
+        <dd>Comparación entre el agua que entra (lluvia, riego) y la que sale (evapotranspiración, drenaje).</dd>
+        <dt>Observación satelital vs. medición terrestre</dt>
+        <dd>El satélite cubre grandes áreas con regularidad pero con menor detalle; la medición en el campo es precisa
+          en un punto. Combinarlas mejora la confianza.</dd>
+      </dl>
+    </details>
+
+    <p class="hint">
+      Fuente de datos principal: <code>power.larc.nasa.gov/api</code> (NASA POWER, acceso público, sin API key). Se
+      piden precipitación (PRECTOTCORR), temperatura a 2m (T2M, T2M_MIN, T2M_MAX), humedad relativa (RH2M) y humedad de
+      suelo modelada (GWETROOT, GWETTOP) diarias, de los años que elijas para el promedio (3 a 30), para calcular la
+      climatología y las anomalías. Para humedad de suelo satelital de mayor precisión (SMAP), la vía de producción es
+      AppEEARS con cuenta de NASA Earthdata Login — requiere backend por su flujo asincrónico. La recomendación de
+      cultivo es un motor de reglas simplificado con rangos agronómicos aproximados: no reemplaza el consejo de un
+      ingeniero agrónomo local.
+    </p>
+
+    <footer>AGRONASA · PROTOTIPO NO OFICIAL · DATOS EN VIVO DE NASA POWER</footer>
+    <p class="ai-note"> Los datos provienen de NASA POWER y NASA GIBS; no se generó con IA ningún dato climático. Los
+      datos del sistema deben ser validados por expertos en el tema.</p>
   </div>
 
-  <a href="./gestion-agricola.html" class="gestion-acceso-boton">
-    Ingresar a Gestión Agrícola
-  </a>
-</section>
-
-
-  <details class="panel glossary">
-    <summary>Glosario: términos científicos</summary>
-    <dl>
-      <dt>Evapotranspiración</dt><dd>Agua que pasa del suelo y de las plantas a la atmósfera. A mayor calor y viento, mayor demanda de agua del cultivo.</dd>
-      <dt>Humedad de suelo (zona de raíces)</dt><dd>Proporción de agua disponible en el suelo donde llegan las raíces (0–100%). NASA POWER la modela; SMAP la mide por satélite en la capa superficial.</dd>
-      <dt>Anomalía</dt><dd>Diferencia entre lo observado y lo normal para esa época. Una anomalía de −40% en lluvia significa que llovió 40% menos que el promedio.</dd>
-      <dt>Percentil</dt><dd>Posición del valor actual entre los años anteriores. Percentil 10 = solo 1 de cada 10 años tuvo menos lluvia.</dd>
-      <dt>NDVI</dt><dd>Índice de vegetación (de −1 a 1) calculado con imágenes satelitales: valores altos indican vegetación densa y vigorosa.</dd>
-      <dt>Riesgo de helada</dt><dd>Temperaturas mínimas del aire de 2 °C o menos, que pueden dañar cultivos sensibles.</dd>
-      <dt>Balance hídrico</dt><dd>Comparación entre el agua que entra (lluvia, riego) y la que sale (evapotranspiración, drenaje).</dd>
-      <dt>Observación satelital vs. medición terrestre</dt><dd>El satélite cubre grandes áreas con regularidad pero con menor detalle; la medición en el campo es precisa en un punto. Combinarlas mejora la confianza.</dd>
-    </dl>
-  </details>
-
-  <p class="hint">
-    Fuente de datos principal: <code>power.larc.nasa.gov/api</code> (NASA POWER, acceso público, sin API key). Se piden precipitación (PRECTOTCORR), temperatura a 2m (T2M, T2M_MIN, T2M_MAX), humedad relativa (RH2M) y humedad de suelo modelada (GWETROOT, GWETTOP) diarias, de los años que elijas para el promedio (3 a 30), para calcular la climatología y las anomalías. Para humedad de suelo satelital de mayor precisión (SMAP), la vía de producción es AppEEARS con cuenta de NASA Earthdata Login — requiere backend por su flujo asincrónico. La recomendación de cultivo es un motor de reglas simplificado con rangos agronómicos aproximados: no reemplaza el consejo de un ingeniero agrónomo local.
-  </p>
-
-  <footer>AGRONASA · PROTOTIPO NO OFICIAL · DATOS EN VIVO DE NASA POWER</footer>
-  <p class="ai-note"> Los datos provienen de NASA POWER y NASA GIBS; no se generó con IA ningún dato climático. Los datos del sistema deben ser validados por expertos en el tema.</p>
-</div>
-
-<!-- Asistente por voz: panel lateral y botón flotante (asistente-voz.js / asistente-voz.css) -->
+  <!-- Asistente por voz: panel lateral y botón flotante (asistente-voz.js / asistente-voz.css) -->
   <aside class="asistente asistente-panel" id="asistente" aria-labelledby="asistenteTitulo" hidden>
     <div class="asistente-barra">
       <div class="asistente-cabecera">
         <h2 class="asistente-titulo" id="asistenteTitulo">🎙 Asistente por voz</h2>
-        <button type="button" id="asistenteCerrar" class="btn-ghost asistente-cerrar" aria-label="Cerrar el asistente por voz">✕ Cerrar</button>
+        <button type="button" id="asistenteCerrar" class="btn-ghost asistente-cerrar"
+          aria-label="Cerrar el asistente por voz">✕ Cerrar</button>
       </div>
       <div>
-        <p class="asistente-desc">Te guía hablando, paso a paso: dónde está tu campo, qué querés sembrar, los resultados del análisis, los datos del terreno y el informe en PDF. Pensado para personas ciegas o con baja visión.</p>
+        <p class="asistente-desc">Te guía hablando, paso a paso: dónde está tu campo, qué querés sembrar, los resultados
+          del análisis, los datos del terreno y el informe en PDF. Pensado para personas ciegas o con baja visión.</p>
       </div>
       <div class="asistente-inicio">
         <button type="button" id="asistenteIniciar">Iniciar asistente por voz</button>
-        <label class="asistente-check"><input type="checkbox" id="asistenteConVoz" checked> El asistente habla (desmarcalo si usás un lector de pantalla)</label>
+        <label class="asistente-check"><input type="checkbox" id="asistenteConVoz" checked> El asistente habla
+          (desmarcalo si usás un lector de pantalla)</label>
       </div>
     </div>
     <div class="asistente-cuerpo" id="asistenteCuerpo" hidden>
       <div class="asistente-estado" id="asistenteEstado" aria-hidden="true"></div>
-      <div class="asistente-log" id="asistenteLog" role="log" aria-live="off" aria-label="Conversación con el asistente" tabindex="0"></div>
+      <div class="asistente-log" id="asistenteLog" role="log" aria-live="off" aria-label="Conversación con el asistente"
+        tabindex="0"></div>
       <form class="asistente-escribir" id="asistenteForm">
         <label for="asistenteTexto">También podés escribir tu respuesta y presionar Enter</label>
         <div class="asistente-fila">
@@ -333,20 +436,31 @@
         <button type="button" id="asistenteRepetir" class="btn-ghost">🔁 Repetir</button>
         <button type="button" id="asistenteTerminar" class="btn-ghost">Terminar asistente</button>
       </div>
-      <p class="asistente-privacidad">El reconocimiento de voz lo hace tu navegador. En Chrome y Edge, el audio se envía a los servidores de Google o Microsoft para entenderlo. Funciona mejor en Chrome o Edge, con Live Server o https.</p>
+      <p class="asistente-privacidad">El reconocimiento de voz lo hace tu navegador. En Chrome y Edge, el audio se envía
+        a los servidores de Google o Microsoft para entenderlo. Funciona mejor en Chrome o Edge, con Live Server o
+        https.</p>
     </div>
   </aside>
 
-  <button type="button" id="asistenteFlotante" class="asistente-flotante" aria-controls="asistente" aria-label="Abrir el asistente por voz"><span aria-hidden="true">🎙</span></button>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="script.js"></script>
-<script src="analisis.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
-<script src="./libs/jspdf.umd.min.js"></script>
-<script src="terreno.js"></script>
-<script src="accesibilidad.js"></script>
-<script src="asistente-voz.js"></script>
-<div id="anuncios" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+  <button type="button" id="botonVolverArriba" class="boton-volver-arriba" aria-label="Volver al inicio de la página"
+    title="Volver arriba" hidden>
+    <span aria-hidden="true">↑</span>
+  </button>
+
+  <button type="button" id="asistenteFlotante" class="asistente-flotante" aria-controls="asistente"
+    aria-label="Abrir el asistente por voz"><span aria-hidden="true">🎙</span></button>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="script.js"></script>
+  <script src="analisis.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
+  <script src="./libs/jspdf.umd.min.js"></script>
+  <script src="terreno.js"></script>
+  <script src="accesibilidad.js"></script>
+  <script src="asistente-voz.js"></script>
+  <script src="boton-volver-arriba.js"></script>
+  <div id="anuncios" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
 </body>
+
 </html>

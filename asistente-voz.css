@@ -266,3 +266,53 @@ body.asistente-abierto .asistente-flotante {
 @media (prefers-reduced-motion: reduce) {
   .asistente-flotante:hover { transform: none; }
 }
+
+/* BOTON VOLVER ARRIBA */
+
+.boton-volver-arriba {
+  position: fixed;
+  right: 102px;
+  bottom: 22px;
+  z-index: 900;
+
+  width: 68px;
+  height: 68px;
+  padding: 0;
+
+  border-radius: 50%;
+  border: 3px solid var(--bg);
+  background: var(--leaf, #58c47b);
+  color: var(--bg, #092015);
+
+  font-size: 32px;
+  line-height: 1;
+  cursor: pointer;
+
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+}
+
+.boton-volver-arriba[hidden] {
+  display: none;
+}
+
+.boton-volver-arriba:hover {
+  transform: scale(1.06);
+}
+
+.boton-volver-arriba:focus-visible {
+  outline: 3px solid #ffcf60;
+  outline-offset: 3px;
+}
+
+/* VERSION CELULAR */
+
+@media (max-width: 600px) {
+  .boton-volver-arriba {
+    right: 98px;
+    bottom: 14px;
+    width: 60px;
+    height: 60px;
+    font-size: 28px;
+  }
+}
+
