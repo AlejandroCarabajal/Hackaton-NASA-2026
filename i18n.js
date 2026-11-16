@@ -15,7 +15,7 @@
   const ATRIBUTOS = ['placeholder', 'title', 'aria-label', 'alt', 'aria-description'];
   const OMITIR = { SCRIPT: 1, STYLE: 1, TEXTAREA: 1, NOSCRIPT: 1, CODE: 1 };
 
-  let idioma = 'es';
+  let idioma = 'en';
   try {
     const g = localStorage.getItem(CLAVE);
     if(g === 'en' || g === 'es') idioma = g;
